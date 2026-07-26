@@ -12,6 +12,11 @@ try {
         }
     }
 
+    $entrySource = Get-Content "Main.lua" -Raw
+    if ($entrySource -notmatch [regex]::Escape("https://cdn.statically.io/gh/Ahlstarr-Mayjishan/Star-glitcher---REVITALIZED/main/")) {
+        throw "Main loader is missing the fresh branch CDN fallback."
+    }
+
     Get-ChildItem "Tests" -Filter "*.spec.luau" |
         Sort-Object Name |
         ForEach-Object {

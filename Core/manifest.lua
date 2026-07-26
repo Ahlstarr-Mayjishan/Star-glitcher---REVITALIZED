@@ -4,7 +4,7 @@
 ]]
 
 return {
-    Version = "1.4.1",
+    Version = "1.4.2",
     Files = {
         -- Core
         ["Core/Main.lua"] = { Version = 180 },
@@ -15,9 +15,9 @@ return {
         ["Core/Brain.lua"] = { Version = 130 },
         
         -- Data
-        ["Data/Config.lua"] = { Version = 140 },
+        ["Data/Config.lua"] = { Version = 150 },
         ["Data/PlaceProfiles.lua"] = { Version = 100 },
-        ["Data/Version.lua"] = { Version = 141 },
+        ["Data/Version.lua"] = { Version = 142 },
         
         -- Modules/Combat
         ["Modules/Combat/AimMath.lua"] = { Version = 100 },
@@ -84,7 +84,7 @@ return {
         ["UI/Tabs/GamemodeTab.lua"] = { Version = 100 },
         ["UI/Tabs/PlayerTab.lua"] = { Version = 100 },
         ["UI/Tabs/PredictionTab.lua"] = { Version = 110 },
-        ["UI/Tabs/SettingsTab.lua"] = { Version = 140 },
+        ["UI/Tabs/SettingsTab.lua"] = { Version = 150 },
         ["UI/Tabs/TeleportTab.lua"] = { Version = 120 },
         ["UI/Tabs/Player/Controller.lua"] = { Version = 110 },
         ["UI/Tabs/Player/LabelUtils.lua"] = { Version = 100 },

@@ -1,10 +1,12 @@
 --[[
     Boss Aim Assist - Optimized Modular Bootstrapper
-    v2.1.0 (Multi-Source Manifest & Cache Driven)
+    v2.2.0 (Multi-CDN Manifest & Cache Driven)
 ]]
 
 local REMOTE_BASES = {
     "https://raw.githubusercontent.com/Ahlstarr-Mayjishan/Star-glitcher---REVITALIZED/main/",
+    "https://cdn.statically.io/gh/Ahlstarr-Mayjishan/Star-glitcher---REVITALIZED/main/",
+    "https://raw.githack.com/Ahlstarr-Mayjishan/Star-glitcher---REVITALIZED/main/",
     "https://cdn.jsdelivr.net/gh/Ahlstarr-Mayjishan/Star-glitcher---REVITALIZED@main/",
 }
 
@@ -71,6 +73,8 @@ local manifestSource, manifestBase, manifestError = fetchRemote("Core/manifest.l
 local resourceManagerSource, managerBase, managerError = fetchRemote("Modules/Utils/ResourceManager.lua")
 
 if manifestSource and resourceManagerSource then
+    local activeBase = managerBase or manifestBase or PRIMARY_BASE
+    _G.StarGlitcher_BootloaderURL = activeBase .. "Main.lua"
     local manifest = compileRemote(manifestSource, "=Core/manifest.lua")
     local ResourceManager = compileRemote(resourceManagerSource, "=Modules/Utils/ResourceManager.lua")
 
@@ -79,7 +83,7 @@ if manifestSource and resourceManagerSource then
     _G.StarGlitcher_ResourceManager = rm
 
     -- 2. Execute Core Main
-    print("[Boot] Launching Core via " .. tostring(managerBase or manifestBase or PRIMARY_BASE))
+    print("[Boot] Launching Core via " .. tostring(activeBase))
     local coreMain = rm:Load("Core/Main.lua")
     return coreMain
 else

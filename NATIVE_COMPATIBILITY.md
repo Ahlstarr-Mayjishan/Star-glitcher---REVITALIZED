@@ -30,7 +30,7 @@ Phạm vi của đợt kiểm tra này là place chính `11380216916 Star Glitch
 | Clean Status Char | UI gọi biến không tồn tại | Không hoạt động | Controller truyền đúng cleaner và Rayfield; reset các option thực sự tồn tại. |
 | Runtime UI loops | Player/Settings loop sống sau cleanup | Lỗi lifecycle | Cả hai controller được đăng ký vào runtime lifecycle và dừng khi destroy. |
 | Auto debris cleanup | Mặc định bật, tag rộng gồm Orb/Effect/Visual | Không an toàn với native | Tắt mặc định, bỏ tag rộng, bảo vệ các root/entity/status/boss native; Smart Cleanup giờ thực sự điều khiển adaptive scheduling. |
-| Loader/cache | Manifest dùng sai đường dẫn `Core/Bootstrap/*` | Lỗi thời, dễ giữ cache cũ | Sửa thành `Modules/Core/Bootstrap/*`, đăng ký adapter mới và tăng toàn bộ version liên quan lên release `1.4.1`. |
+| Loader/cache | Manifest dùng sai đường dẫn và jsDelivr `@main` có thể giữ bản cũ | Lỗi thời, dễ giữ cache cũ | Sửa bootstrap path, thêm Statically/GitHack trước jsDelivr, ghi nhớ CDN đang hoạt động cho rejoin, và tăng release lên `1.4.2`. |
 | Teleport/config notification | Phụ thuộc global Rayfield ngầm | Đúng một phần | Rayfield được truyền rõ ràng vào Player, Settings và Teleport UI. |
 
 ## Giới hạn còn lại

@@ -1,1 +1,1 @@
-return 141 -- Version 1.4.1 (Silent aim source redirect regression fix)
+return 142 -- Version 1.4.2 (Silent aim fix with fresh CDN loader fallback)
