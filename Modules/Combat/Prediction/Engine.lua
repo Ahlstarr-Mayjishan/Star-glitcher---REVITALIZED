@@ -58,9 +58,11 @@ function Engine:_ResolveTargetProfile(entry, part)
 
     if humanoid then
         local modelHeight = 0
-        if model then
-            local extents = model:GetExtentsSize()
+        if model and model.Parent then
+            local ok, extents = pcall(model.GetExtentsSize, model)
+            if ok and typeof(extents) == "Vector3" then
             modelHeight = extents.Y
+            end
         end
 
         local isMiniHumanoid = size.Y <= 2.6

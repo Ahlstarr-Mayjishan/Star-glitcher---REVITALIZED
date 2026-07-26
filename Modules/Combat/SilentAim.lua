@@ -71,14 +71,18 @@ local function isBossAggressiveRemote(selfRef, remote, args)
 end
 
 local function buildTargetCFrame(targetPos)
-    local camPos = Workspace.CurrentCamera.CFrame.Position
-    return CFrame.lookAt(camPos, targetPos)
+    local camera = Workspace.CurrentCamera
+    if not camera then
+        return CFrame.new(targetPos)
+    end
+    return CFrame.lookAt(camera.CFrame.Position, targetPos)
 end
 
 local function buildTargetRay(origin, targetPos, length)
     local direction = targetPos - origin
     if direction.Magnitude <= 0.001 then
-        direction = Workspace.CurrentCamera.CFrame.LookVector
+        local camera = Workspace.CurrentCamera
+        direction = camera and camera.CFrame.LookVector or Vector3.zAxis
     else
         direction = direction.Unit * (length or (targetPos - origin).Magnitude)
     end
@@ -111,7 +115,11 @@ local function ensureHookState()
                 elseif index == "Target" then
                     return selfRef.TargetPartCache
                 elseif index == "UnitRay" then
-                    local camPos = Workspace.CurrentCamera.CFrame.Position
+                    local camera = Workspace.CurrentCamera
+                    if not camera then
+                        return oldIndex(inst, index)
+                    end
+                    local camPos = camera.CFrame.Position
                     return buildTargetRay(camPos, selfRef.TargetPosCache, 1)
                 end
             end
@@ -133,7 +141,11 @@ local function ensureHookState()
             if selfRef:_shouldRedirectAimSource()
                 and (method == "ViewportPointToRay" or method == "ScreenPointToRay")
                 and inst == Workspace.CurrentCamera then
-                local camPos = Workspace.CurrentCamera.CFrame.Position
+                local camera = Workspace.CurrentCamera
+                if not camera then
+                    return oldNamecall(inst, unpack(args, 1, args.n))
+                end
+                local camPos = camera.CFrame.Position
                 return buildTargetRay(camPos, selfRef.TargetPosCache, 1)
             end
 
@@ -228,7 +240,11 @@ function SilentAim.new(config, synapse, resolver, policy)
 end
 
 function SilentAim:_hasTargetLock()
-    return self.Active and self.TargetPosCache ~= nil and self.TargetPartCache ~= nil
+    return self.Active
+        and typeof(self.TargetPosCache) == "Vector3"
+        and typeof(self.TargetPartCache) == "Instance"
+        and self.TargetPartCache:IsA("BasePart")
+        and self.TargetPartCache.Parent ~= nil
 end
 
 function SilentAim:_shouldRedirectAimSource()
@@ -282,16 +298,30 @@ function SilentAim:NotifyShot(now, entry)
 end
 
 function SilentAim:SetState(active, targetPart, targetPos, currentEntry, dt)
+    if not active
+        or typeof(targetPart) ~= "Instance"
+        or not targetPart:IsA("BasePart")
+        or not targetPart.Parent
+        or typeof(targetPos) ~= "Vector3" then
+        self:Clear()
+        return
+    end
+
     self.Active = active
     self.TargetPartCache = targetPart
     
     local resolvedPos = active and self.Resolver and self.Resolver.Resolve and self.Resolver:Resolve(targetPart, targetPos, currentEntry) or targetPos
     
     -- Multi-Point Hitbox: Adjust resolved point to nearest surface point if part is large (e.g., Boss)
-    if active and targetPart and self.Options and self.Options.MultiPointHitbox ~= false then
+    if self.Options and self.Options.MultiPointHitbox ~= false then
         local size = targetPart.Size
         if size.X > 6 or size.Y > 6 or size.Z > 6 then
-            local camPos = Workspace.CurrentCamera.CFrame.Position
+            local camera = Workspace.CurrentCamera
+            if not camera then
+                self:Clear()
+                return
+            end
+            local camPos = camera.CFrame.Position
             local cf = targetPart.CFrame
             local localCam = cf:PointToObjectSpace(camPos)
             local half = size * 0.45 -- 45% inner boundary for safe collision

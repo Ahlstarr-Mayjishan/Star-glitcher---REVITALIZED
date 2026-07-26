@@ -84,6 +84,15 @@ return function(Window, Options, Visuals, NPCTracker)
         end,
     })
 
+    Tab:CreateToggle({
+        Name = "Large Boss Multi-Point",
+        CurrentValue = Options.MultiPointHitbox ~= false,
+        Flag = "MultiPointHitboxToggle",
+        Callback = function(Value)
+            Options.MultiPointHitbox = Value
+        end,
+    })
+
     -- ===================================================
     -- SECTION: CUSTOM VALUE
     -- ===================================================

@@ -51,13 +51,15 @@ function NPCTracker.new(config, detector, taskScheduler, targetClassifier)
     self._cacheDirty = true
     self._folderRefs = {}
     self._folderConnections = {}
+    self._modelConnections = {}
     self._lastFolderRefresh = 0
     self._folderRefreshInterval = 2
     self._staleSweepInterval = 3
     self._entryExpiry = 18
     self._deadEntryExpiry = 6
     self._maxEntries = 180
-    self._bossRefreshInterval = 8
+    self._bossRefreshInterval = 1
+    self._targetValidationInterval = 0.12
     self._schedulerAlive = false
     self._staleSweepScheduled = false
     self._staleSweepGeneration = 0
@@ -110,6 +112,57 @@ function NPCTracker:Prune(now)
     end
 end
 
+function NPCTracker:_disconnectModel(model)
+    local connections = self._modelConnections[model]
+    if not connections then
+        return
+    end
+    for _, connection in ipairs(connections) do
+        connection:Disconnect()
+    end
+    self._modelConnections[model] = nil
+end
+
+function NPCTracker:_invalidateModel(model)
+    local entry = self._entries[model]
+    if entry then
+        entry.LastValidation = 0
+        entry.LastBossCheck = 0
+        entry.ResolvedTargetPart = nil
+        entry.ResolvedTargetKey = nil
+    end
+    if self.Detector and self.Detector.Invalidate then
+        self.Detector:Invalidate(model)
+    end
+    self._cacheDirty = true
+end
+
+function NPCTracker:_watchModel(model)
+    if not model or not model:IsA("Model") or self._modelConnections[model] then
+        return
+    end
+
+    local selfRef = self
+    local connections = {}
+    connections[#connections + 1] = model.DescendantAdded:Connect(function()
+        selfRef:_invalidateModel(model)
+    end)
+    connections[#connections + 1] = model.DescendantRemoving:Connect(function()
+        selfRef:_invalidateModel(model)
+    end)
+    connections[#connections + 1] = model.AttributeChanged:Connect(function()
+        selfRef:_invalidateModel(model)
+    end)
+    connections[#connections + 1] = model.AncestryChanged:Connect(function(_, parent)
+        if not parent then
+            selfRef._entries[model] = nil
+            selfRef:_disconnectModel(model)
+        end
+        selfRef._cacheDirty = true
+    end)
+    self._modelConnections[model] = connections
+end
+
 function NPCTracker:_refreshFolderRefs()
     local changed = false
     for i = 1, #self._folders do
@@ -129,17 +182,22 @@ function NPCTracker:_refreshFolderRefs()
         local selfRef = self
         for _, folder in ipairs(self._folderRefs) do
             if folder then
-                self._folderConnections[#self._folderConnections + 1] = folder.ChildAdded:Connect(function()
+                for _, child in ipairs(folder:GetChildren()) do
+                    self:_watchModel(child)
+                end
+                self._folderConnections[#self._folderConnections + 1] = folder.ChildAdded:Connect(function(child)
+                    selfRef:_watchModel(child)
                     selfRef._cacheDirty = true
                 end)
                 self._folderConnections[#self._folderConnections + 1] = folder.ChildRemoved:Connect(function(child)
                     selfRef._entries[child] = nil
+                    selfRef:_disconnectModel(child)
                     selfRef._cacheDirty = true
                 end)
             end
         end
+        self._cacheDirty = true
     end
-    self._cacheDirty = true
 end
 
 function NPCTracker:_queueFolderRefresh()
@@ -423,7 +481,7 @@ function NPCTracker:IsEntryTargetable(entry, forceRefresh)
     if forceRefresh
         or entry.Targetable == nil
         or not entry.LastValidation
-        or (now - entry.LastValidation) >= 0.5 then
+        or (now - entry.LastValidation) >= self._targetValidationInterval then
         entry.Targetable = self:_IsTargetCandidate(entry.Model, entry)
         entry.LastValidation = now
     end
@@ -458,6 +516,7 @@ function NPCTracker:GetTargets()
         
         local entry = self:_GetOrCreateEntry(model)
         if entry then
+            self:_watchModel(model)
             entry.LastSeen = now
             entry.PrimaryPart = self:_GetPrimaryPart(model) or entry.PrimaryPart
             entry.Humanoid = model:FindFirstChildOfClass("Humanoid") or entry.Humanoid
@@ -608,6 +667,9 @@ function NPCTracker:Destroy()
         connection:Disconnect()
     end
     table.clear(self._folderConnections)
+    for model in pairs(self._modelConnections) do
+        self:_disconnectModel(model)
+    end
     self:ClearCache()
 end
 

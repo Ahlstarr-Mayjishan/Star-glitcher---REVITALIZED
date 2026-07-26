@@ -38,6 +38,13 @@ function ResourceManager.BuildUrl(base, path, cacheKey)
     return url
 end
 
+function ResourceManager.VersionNumber(version)
+    local major, minor, patch = tostring(version or "0"):match("^(%d+)%.(%d+)%.(%d+)")
+    return (tonumber(major) or 0) * 1000000
+        + (tonumber(minor) or 0) * 1000
+        + (tonumber(patch) or 0)
+end
+
 function ResourceManager.IsValidSource(content)
     if type(content) ~= "string" or content:match("^%s*$") then
         return false
@@ -195,6 +202,42 @@ function ResourceManager:GetSource(path)
     end
 
     error("[Resource] Fatal fetch error: Failed to load " .. path .. " from every configured source. Last error: " .. tostring(lastError))
+end
+
+function ResourceManager:FetchFreshSource(path, bases)
+    local lastError = nil
+    for _, base in ipairs(ResourceManager.NormalizeBases(bases or self.RemoteBases)) do
+        local cacheKey = self.SessionID .. "-" .. tostring(math.floor(os.clock() * 1000))
+        local url = ResourceManager.BuildUrl(base, path, cacheKey)
+        local ok, content = pcall(game.HttpGet, game, url)
+        if ok and ResourceManager.IsValidSource(content) then
+            return content, base
+        end
+        lastError = tostring(content)
+    end
+    error("[Resource] Fresh fetch failed for " .. tostring(path) .. ": " .. tostring(lastError))
+end
+
+function ResourceManager:GetLatestManifestVersion()
+    local compiler = loadstring or load
+    if not compiler then
+        return 0
+    end
+
+    local highest = 0
+    for _, base in ipairs(self.RemoteBases) do
+        local ok, source = pcall(self.FetchFreshSource, self, "Core/manifest.lua", {base})
+        if ok then
+            local chunk = compiler(source, "=remote-manifest")
+            if chunk then
+                local manifestOk, manifest = pcall(chunk)
+                if manifestOk and type(manifest) == "table" then
+                    highest = math.max(highest, ResourceManager.VersionNumber(manifest.Version))
+                end
+            end
+        end
+    end
+    return highest
 end
 
 function ResourceManager:Load(path)

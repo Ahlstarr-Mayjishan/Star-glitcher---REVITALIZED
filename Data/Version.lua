@@ -1,1 +1,1 @@
-return 150 -- Version 1.5.0 (Low-latency replicated boss motion tracking)
+return 1006000 -- Version 1.6.0 (coherent loader and event-driven target lifecycle)

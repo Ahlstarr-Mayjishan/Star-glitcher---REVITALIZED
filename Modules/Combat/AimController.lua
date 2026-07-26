@@ -35,6 +35,11 @@ function AimController:_release()
     self.Actuator:Rest()
 end
 
+function AimController:_clearOutput()
+    self.Presentation:Clear()
+    self.Actuator:Rest()
+end
+
 function AimController:_acquire(mousePosition, originPosition, dt)
     if not self.Policy.AdvanceScan(self.Options, self.Timing, dt, clock()) then
         return
@@ -94,6 +99,7 @@ function AimController:Step(dt, mousePosition, cameraCFrame, camera)
 
     local part = self:_validateTarget()
     if not part then
+        self:_clearOutput()
         return
     end
 
@@ -125,6 +131,12 @@ end
 function AimController:Destroy()
     self._destroyed = true
     self:_release()
+end
+
+function AimController:Recover()
+    if not self._destroyed then
+        self:_release()
+    end
 end
 
 return AimController

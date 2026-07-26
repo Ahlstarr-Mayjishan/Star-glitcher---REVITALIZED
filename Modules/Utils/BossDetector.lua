@@ -137,6 +137,12 @@ function BossDetector:Init()
     self._destroyed = false
 end
 
+function BossDetector:Invalidate(model)
+    if model then
+        self._cache[model] = nil
+    end
+end
+
 function BossDetector:IsBoss(model, humanoid)
     if self._destroyed then
         return false

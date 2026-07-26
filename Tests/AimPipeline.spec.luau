@@ -112,4 +112,14 @@ assert(controller.State.Entry == nil, "off mode must release controller state")
 assert(tracker.CurrentTargetEntry == nil, "off mode must clear compatibility target mirror")
 assert(calls.Cleared > 0, "off mode must clear active output")
 
-print("Aim pipeline: 19 cases passed")
+controllerOptions.AssistMode = "Camera Lock"
+selector.GetClosestTarget = function()
+    return nil
+end
+controller:Step(1 / 30, {}, { Position = "origin" }, {})
+assert(controller.State.Entry == nil, "an empty scan must clear the previous target")
+local clearedAfterLostTarget = calls.Cleared
+controller:Step(1 / 30, {}, { Position = "origin" }, {})
+assert(calls.Cleared > clearedAfterLostTarget, "no-target frames must keep stale actuators disabled")
+
+print("Aim pipeline: 22 cases passed")

@@ -13,7 +13,7 @@ Phạm vi của đợt kiểm tra này là place chính `11380216916 Star Glitch
 
 | Hệ thống | Trước khi sửa | So với native | Kết quả hiện tại |
 |---|---|---|---|
-| Nguồn target | Quét nhiều folder theo heuristic | Đúng một phần | Vẫn hỗ trợ fallback, nhưng `workspace.Entities` được xem là nguồn có thẩm quyền và cập nhật bằng `ChildAdded/ChildRemoved`. |
+| Nguồn target | Quét nhiều folder theo heuristic | Đúng một phần | Vẫn hỗ trợ fallback, nhưng `workspace.Entities` được xem là nguồn có thẩm quyền; model summon được theo dõi qua child, descendant và attribute events để nhận boss ngay cả khi model được lắp ráp theo nhiều bước. |
 | Loại tượng/ExtraNPC | Có thể lọt vào target list | Sai | Loại direct child của `workspace.ExtraNPC`, cùng các quan hệ `ParentEntity`. |
 | Team và safe zone | Không áp dụng đầy đủ | Sai | Đọc `Status.Team`, `Status.SafeZoned`; loại team `-1`, cùng team khác FFA, và target trong safe zone. Team `0` giữ đúng hành vi FFA. |
 | Nhận diện boss | Chủ yếu dựa tên/kích thước/health | Đúng một phần | `IsBoss=true/false` là kết quả có thẩm quyền; heuristic chỉ còn là fallback cho game/model không theo protocol native. |
@@ -32,7 +32,7 @@ Phạm vi của đợt kiểm tra này là place chính `11380216916 Star Glitch
 | Clean Status Char | UI gọi biến không tồn tại | Không hoạt động | Controller truyền đúng cleaner và Rayfield; reset các option thực sự tồn tại. |
 | Runtime UI loops | Player/Settings loop sống sau cleanup | Lỗi lifecycle | Cả hai controller được đăng ký vào runtime lifecycle và dừng khi destroy. |
 | Auto debris cleanup | Mặc định bật, tag rộng gồm Orb/Effect/Visual | Không an toàn với native | Tắt mặc định, bỏ tag rộng, bảo vệ các root/entity/status/boss native; Smart Cleanup giờ thực sự điều khiển adaptive scheduling. |
-| Loader/cache | Manifest dùng sai đường dẫn và jsDelivr `@main` có thể giữ bản cũ | Lỗi thời, dễ giữ cache cũ | Sửa bootstrap path, thêm Statically/GitHack trước jsDelivr, ghi nhớ CDN đang hoạt động cho rejoin, và tăng release lên `1.5.0`. |
+| Loader/cache | Manifest dùng sai đường dẫn và jsDelivr `@main` có thể giữ bản cũ | Lỗi thời, dễ giữ cache cũ | Sửa bootstrap path, chọn manifest mới nhất trên các nguồn, ưu tiên release commit-pinned nhất quán, giữ nhiều CDN fallback, và tăng release lên `1.6.0`. |
 | Teleport/config notification | Phụ thuộc global Rayfield ngầm | Đúng một phần | Rayfield được truyền rõ ràng vào Player, Settings và Teleport UI. |
 
 ## Giới hạn còn lại

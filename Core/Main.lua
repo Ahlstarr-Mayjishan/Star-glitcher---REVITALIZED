@@ -265,8 +265,16 @@ local runtimeLifecycle = RuntimeLifecycle.new(
     cleaner,
     Synapse,
     _G.StarGlitcher_BootloaderURL or (Config.GITHUB_BASE .. "Main.lua"),
-    function(url) return loadstring(game:HttpGet(url))() end,
-    function() return tonumber(Config.VERSION:gsub("%.", "")) or 130 end, -- Fallback version
+    function()
+        local source = resourceManager:FetchFreshSource(
+            "Main.lua",
+            _G.StarGlitcher_DynamicRemoteBases or resourceManager.RemoteBases
+        )
+        return loadstring(source, "=updated-entry")()
+    end,
+    function()
+        return resourceManager:GetLatestManifestVersion()
+    end,
     function() 
         local objects = {
             aimController, input, localChar, detector, tracker, pred, selector, aimbot, silentAim,
@@ -288,6 +296,7 @@ rejoinOnKick:Init()
 
 -- Event Connections
 local function reg(connection) return runtimeLifecycle:RegisterConnection(connection) end
+local lastAimRuntimeWarning = 0
 reg(RunService.RenderStepped:Connect(function(dt)
     local camera = Workspace.CurrentCamera
     if not camera then
@@ -296,7 +305,15 @@ reg(RunService.RenderStepped:Connect(function(dt)
 
     local mousePos = UserInputService:GetMouseLocation()
     local cameraCFrame = camera.CFrame
-    aimController:Step(dt, mousePos, cameraCFrame, camera)
+    local ok, err = pcall(aimController.Step, aimController, dt, mousePos, cameraCFrame, camera)
+    if not ok then
+        aimController:Recover()
+        local now = os.clock()
+        if (now - lastAimRuntimeWarning) >= 2 then
+            lastAimRuntimeWarning = now
+            warn("[Aim] Frame recovered after runtime error: " .. tostring(err))
+        end
+    end
 end))
 
 warn(" [Core] Star Glitcher Aim Pipeline Active (Optimized v8.0).")

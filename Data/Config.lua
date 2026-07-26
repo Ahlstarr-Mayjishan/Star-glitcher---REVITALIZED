@@ -5,7 +5,7 @@
 
 local Config = {}
 
-Config.VERSION = "1.5.0"
+Config.VERSION = "1.6.0"
 Config.GITHUB_BASE = _G.StarGlitcher_GithubBase
     or "https://raw.githubusercontent.com/Ahlstarr-Mayjishan/Star-glitcher---REVITALIZED/main/"
 
@@ -29,6 +29,7 @@ Config.Options = {
     VisibilityCheckEnabled = true,
     VisibilityRefreshInterval = 0.1,
     VisibilityMovementThreshold = 6,
+    MultiPointHitbox = true,
     Smoothness = 0.18,
     MaxDistance = 1500,
     ProjectileVelocity = 250,

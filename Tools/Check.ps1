@@ -16,6 +16,14 @@ try {
     if ($entrySource -notmatch [regex]::Escape("https://cdn.statically.io/gh/Ahlstarr-Mayjishan/Star-glitcher---REVITALIZED/main/")) {
         throw "Main loader is missing the fresh branch CDN fallback."
     }
+    if ($entrySource -notmatch "selectManifest" -or $entrySource -notmatch "STABLE_RELEASE_REF") {
+        throw "Main loader is missing release-coherent manifest selection."
+    }
+
+    $trackerSource = Get-Content "Modules/Utils/NPCTracker.lua" -Raw
+    if ($trackerSource -notmatch "DescendantAdded" -or $trackerSource -notmatch "AttributeChanged") {
+        throw "NPC tracker is missing event-driven summon invalidation."
+    }
 
     $invalidVectorMembers = & rg -n '\.(XZ|XY|YZ)\b' Modules -g '*.lua' -g '*.luau'
     if ($LASTEXITCODE -eq 0) {
