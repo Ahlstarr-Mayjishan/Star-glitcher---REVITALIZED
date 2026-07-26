@@ -1,1 +1,1 @@
-return 142 -- Version 1.4.2 (Silent aim fix with fresh CDN loader fallback)
+return 143 -- Version 1.4.3 (Roblox Vector3 estimator compatibility hotfix)

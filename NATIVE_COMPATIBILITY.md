@@ -20,6 +20,7 @@ Phạm vi của đợt kiểm tra này là place chính `11380216916 Star Glitch
 | Cube, orb và summon lạ | Tên dạng prop có thể bị loại | Sai một phần | Model trực tiếp trong `Entities` không còn bị loại chỉ vì tên; non-Humanoid vẫn được hỗ trợ khi có bằng chứng combat. |
 | Root/aim part | Có fallback rộng | Đúng một phần | Thứ tự root native được ưu tiên: `HumanoidRootPart`, `Torso`, `Head`; fallback `PrimaryPart/BasePart` chỉ dùng sau đó. |
 | Predictor | Dùng chung vị trí theo dõi của tracker | Sai | Mẫu vị trí/thời gian thuộc riêng state predictor của từng target, tránh velocity bằng 0 giả khi model di chuyển bằng CFrame/PivotTo. |
+| Estimator turn rate | Dùng member không tồn tại `Vector3.XZ` | Runtime error, chặn toàn bộ aim | Tính tốc độ ngang trực tiếp từ `X² + Z²`; check script chặn `XZ/XY/YZ` quay lại. |
 | Aim Offset | Có option/UI nhưng không đi vào kết quả | Không hoạt động | Offset được áp dụng trong prediction engine kể cả khi tắt prediction. |
 | Adaptive hit feedback | Mọi health delta gần shot đều có thể bị coi là hit | Không đáng tin hoàn toàn | Chuyển thành tùy chọn experimental và tắt mặc định để tránh học từ damage của người khác hoặc damage trễ. |
 | Silent aim source | Camera/mouse ray từng bị buộc vào cửa sổ 0,35 giây | Regression ở 1.4.0 | Mouse/camera aim source redirect liên tục khi có target lock; remote và world side-effect ray vẫn chỉ rewrite trong cửa sổ bắn. Hook được version hóa để reload trong cùng session nhận logic mới. |

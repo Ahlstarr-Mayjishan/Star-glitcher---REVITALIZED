@@ -17,6 +17,14 @@ try {
         throw "Main loader is missing the fresh branch CDN fallback."
     }
 
+    $invalidVectorMembers = & rg -n '\.(XZ|XY|YZ)\b' Modules -g '*.lua' -g '*.luau'
+    if ($LASTEXITCODE -eq 0) {
+        throw "Invalid Roblox Vector3 member detected:`n$invalidVectorMembers"
+    }
+    if ($LASTEXITCODE -ne 1) {
+        throw "Failed to scan for invalid Vector3 members."
+    }
+
     Get-ChildItem "Tests" -Filter "*.spec.luau" |
         Sort-Object Name |
         ForEach-Object {
@@ -37,6 +45,7 @@ try {
         "Modules/Combat/SilentAimPolicy.lua",
         "Modules/Combat/TargetSelector.lua",
         "Modules/Combat/Prediction/Engine.lua",
+        "Modules/Combat/Prediction/Estimator.lua",
         "Modules/Utils/BossDetector.lua",
         "Modules/Utils/NativeTargetPolicy.lua",
         "Modules/Utils/NPCTracker.lua",

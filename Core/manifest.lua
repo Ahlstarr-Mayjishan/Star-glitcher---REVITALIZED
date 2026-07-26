@@ -4,7 +4,7 @@
 ]]
 
 return {
-    Version = "1.4.2",
+    Version = "1.4.3",
     Files = {
         -- Core
         ["Core/Main.lua"] = { Version = 180 },
@@ -15,9 +15,9 @@ return {
         ["Core/Brain.lua"] = { Version = 130 },
         
         -- Data
-        ["Data/Config.lua"] = { Version = 150 },
+        ["Data/Config.lua"] = { Version = 160 },
         ["Data/PlaceProfiles.lua"] = { Version = 100 },
-        ["Data/Version.lua"] = { Version = 142 },
+        ["Data/Version.lua"] = { Version = 143 },
         
         -- Modules/Combat
         ["Modules/Combat/AimMath.lua"] = { Version = 100 },
@@ -35,7 +35,7 @@ return {
         ["Modules/Combat/Prediction/SilentResolver.lua"] = { Version = 110 },
         ["Modules/Combat/Prediction/Base.lua"] = { Version = 100 },
         ["Modules/Combat/Prediction/Engine.lua"] = { Version = 110 },
-        ["Modules/Combat/Prediction/Estimator.lua"] = { Version = 110 },
+        ["Modules/Combat/Prediction/Estimator.lua"] = { Version = 120 },
         ["Modules/Combat/Prediction/FeedbackLoop.lua"] = { Version = 100 },
         ["Modules/Combat/Prediction/Sampler.lua"] = { Version = 100 },
         ["Modules/Combat/Prediction/Stabilizer.lua"] = { Version = 100 },

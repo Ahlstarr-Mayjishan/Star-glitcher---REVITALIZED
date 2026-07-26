@@ -2,7 +2,7 @@
 
 local manifest = require("../Core/manifest")
 
-assert(manifest.Version == "1.4.2", "manifest release version must match the silent aim/CDN regression fix")
+assert(manifest.Version == "1.4.3", "manifest release version must match the Vector3 estimator hotfix")
 assert(manifest.Files["Modules/Core/Bootstrap/Normalize.lua"], "bootstrap normalize path must match the runtime require path")
 assert(manifest.Files["Modules/Core/Bootstrap/RayfieldUI.lua"], "Rayfield bootstrap path must match the runtime require path")
 assert(not manifest.Files["Core/Bootstrap/Normalize.lua"], "obsolete bootstrap cache key must not remain")

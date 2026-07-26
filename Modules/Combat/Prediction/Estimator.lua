@@ -1,3 +1,5 @@
+--!strict
+
 --[[
     Estimator.lua - State Estimation & Noise Removal (Physics Damping v2)
     Analogy: Inferior Colliculus (Auditory/Visual processing before perception).
@@ -102,7 +104,9 @@ function Estimator:Estimate(raw, dt)
 
         -- Calculate horizontal angular velocity (turn rate)
         local currentYaw = math.atan2(-filteredVel.Z, filteredVel.X)
-        if filteredVel.XZ.Magnitude > 1 then
+        local horizontalSpeedSquared = (filteredVel.X * filteredVel.X)
+            + (filteredVel.Z * filteredVel.Z)
+        if horizontalSpeedSquared > 1 then
             local deltaYaw = currentYaw - self._prevYaw
             -- Normalize angle delta to [-pi, pi]
             while deltaYaw > math.pi do deltaYaw = deltaYaw - (2 * math.pi) end
