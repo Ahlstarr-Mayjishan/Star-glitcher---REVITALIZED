@@ -56,11 +56,11 @@ return {
         ["Modules/Utils/GarbageCollector.lua"] = { Version = 120 },
         ["Modules/Utils/InputHandler.lua"] = { Version = 115 },
         ["Modules/Utils/LocalCharacter.lua"] = { Version = 110 },
-        ["Modules/Utils/NPCTracker.lua"] = { Version = 140 },
+        ["Modules/Utils/NPCTracker.lua"] = { Version = 150 },
         ["Modules/Utils/ResourceManager.lua"] = { Version = 160 },
         ["Modules/Utils/Synapse.lua"] = { Version = 100 },
         ["Modules/Utils/TaskScheduler.lua"] = { Version = 110 },
-        ["Modules/Utils/TargetClassifier.lua"] = { Version = 100 },
+        ["Modules/Utils/TargetClassifier.lua"] = { Version = 110 },
         ["Modules/Utils/Math/Kalman.lua"] = { Version = 100 },
         
         ["Modules/Utils/CharacterCleaner.lua"] = { Version = 100 },

@@ -192,10 +192,12 @@ end
 function NPCTracker:_GetCombatFolderConfidence(model)
     for _, folder in ipairs(self._folderRefs) do
         if folder and (model.Parent == folder or model:IsDescendantOf(folder)) then
-            return STRONG_COMBAT_FOLDERS[folder.Name] == true
+            local authoritativeEntityFolder = folder.Name == "Entities"
+                and model.Parent == folder
+            return STRONG_COMBAT_FOLDERS[folder.Name] == true, authoritativeEntityFolder
         end
     end
-    return false
+    return false, false
 end
 
 function NPCTracker:_HasExplicitCombatMarker(model)
@@ -238,7 +240,7 @@ function NPCTracker:_GetPrimaryPart(model)
         or model.PrimaryPart
         or model:FindFirstChild("Torso")
         or model:FindFirstChild("Head")
-        or model:FindFirstChildWhichIsA("BasePart")
+        or model:FindFirstChildWhichIsA("BasePart", true)
 end
 
 function NPCTracker:_IsTargetCandidate(model, existingEntry)
@@ -253,8 +255,16 @@ function NPCTracker:_IsTargetCandidate(model, existingEntry)
         return self.Options.TargetPlayersToggle == true
     end
 
-    -- Blacklist/Sanity
-    if self:_HasBlacklistedName(model) or self:_HasDecorativeLineage(model) then
+    local strongCombatFolder, authoritativeEntityFolder = self:_GetCombatFolderConfidence(model)
+
+    -- Names such as Cube, Bomb, Stone, or Dummy may be legitimate summoned
+    -- bosses. Only bypass the prop-name filter for direct children of the
+    -- game's own workspace.Entities combat container.
+    if self.TargetClassifier.ShouldRejectStructuralName({
+        HasBlacklistedName = self:_HasBlacklistedName(model),
+        HasDecorativeLineage = self:_HasDecorativeLineage(model),
+        AuthoritativeEntityFolder = authoritativeEntityFolder,
+    }) then
         return false
     end
 
@@ -291,7 +301,6 @@ function NPCTracker:_IsTargetCandidate(model, existingEntry)
         return false
     end
 
-    local strongCombatFolder = self:_GetCombatFolderConfidence(model)
     local explicitCombatMarker = self:_HasExplicitCombatMarker(model)
 
     return self.TargetClassifier.ClassifyCombatEvidence({
@@ -302,6 +311,7 @@ function NPCTracker:_IsTargetCandidate(model, existingEntry)
         MaxHealth = maxHealth,
         IsBoss = isBoss == true,
         StrongCombatFolder = strongCombatFolder,
+        AuthoritativeEntityFolder = authoritativeEntityFolder,
         ExplicitCombatMarker = explicitCombatMarker,
     })
 end
@@ -464,7 +474,10 @@ function NPCTracker:GetTargetPart(entry)
         end
     end
 
-    local resolvedPart = targetPart or entry.PrimaryPart or model.PrimaryPart or model:FindFirstChildWhichIsA("BasePart")
+    local resolvedPart = targetPart
+        or entry.PrimaryPart
+        or model.PrimaryPart
+        or model:FindFirstChildWhichIsA("BasePart", true)
     if resolvedPart then
         entry.PrimaryPart = resolvedPart
         entry.ResolvedTargetPart = resolvedPart
