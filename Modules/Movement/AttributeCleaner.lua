@@ -3,31 +3,25 @@ local RunService = game:GetService("RunService")
 local AttributeCleaner = {}
 AttributeCleaner.__index = AttributeCleaner
 
-function AttributeCleaner.new(options, localCharacter)
+function AttributeCleaner.new(options, localCharacter, nativeStatus)
     local self = setmetatable({}, AttributeCleaner)
     self.Options = options
     self.LocalCharacter = localCharacter
+    self.NativeStatus = nativeStatus
     self.Connection = nil
     self._lastSweep = 0
     self._sweepInterval = 0.12
     return self
 end
 
-local function shouldClearName(lowerName)
-    if not lowerName or lowerName == "" then
-        return false
-    end
-
-    -- Only clear explicit movement-impairing debuffs.
-    -- Avoid generic names like "delay", "cooldown", or "root" because
-    -- many games use them for legitimate form-switch / ability logic.
-    return lowerName:find("slow", 1, true)
-        or lowerName:find("stun", 1, true)
-        or lowerName:find("freeze", 1, true)
-        or lowerName:find("ragdoll", 1, true)
-        or lowerName:find("snare", 1, true)
-        or lowerName:find("immobile", 1, true)
-end
+local NATIVE_CC_FLAGS = {
+    Stunned = true,
+    Frozen = true,
+    Ragdolled = true,
+    Slowed = true,
+    Snared = true,
+    Immobilized = true,
+}
 
 function AttributeCleaner:Init()
     self.Connection = RunService.Heartbeat:Connect(function()
@@ -46,20 +40,8 @@ function AttributeCleaner:Init()
             return
         end
 
-        for _, child in ipairs(char:GetChildren()) do
-            if child:IsA("ValueBase") then
-                local n = child.Name:lower()
-                if shouldClearName(n) then
-                    child:Destroy()
-                end
-            end
-        end
-
-        for attr, _ in pairs(char:GetAttributes()) do
-            local lower = attr:lower()
-            if shouldClearName(lower) then
-                char:SetAttribute(attr, nil)
-            end
+        if self.NativeStatus then
+            self.NativeStatus.ClearBooleanFlags(char, NATIVE_CC_FLAGS)
         end
     end)
 end

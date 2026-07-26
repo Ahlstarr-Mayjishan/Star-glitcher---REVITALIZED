@@ -1,4 +1,4 @@
-return function(Window, Options, waypointTeleport)
+return function(Window, Options, waypointTeleport, rayfield)
     local Tab = Window:CreateTab("Teleport", 4483362458)
 
     local waypointDropdown = Tab:CreateDropdown({
@@ -38,8 +38,8 @@ return function(Window, Options, waypointTeleport)
 
             local nameToSet = customNameInput ~= "" and customNameInput or nil
             local ok, detail = waypointTeleport:SetWaypoint(nameToSet)
-            if Rayfield and Rayfield.Notify then
-                Rayfield:Notify({
+            if rayfield and rayfield.Notify then
+                rayfield:Notify({
                     Title = ok and "Waypoint Saved" or "Waypoint Failed",
                     Content = ok and ("Saved " .. tostring(detail)) or tostring(detail),
                     Duration = 4,
@@ -57,8 +57,8 @@ return function(Window, Options, waypointTeleport)
             end
 
             local ok, detail = waypointTeleport:GotoSelectedWaypoint()
-            if Rayfield and Rayfield.Notify then
-                Rayfield:Notify({
+            if rayfield and rayfield.Notify then
+                rayfield:Notify({
                     Title = ok and "Teleport Started" or "Teleport Failed",
                     Content = ok and ("Heading to " .. tostring(detail) .. " via " .. tostring(Options.TeleportMethod or "Tween")) or tostring(detail),
                     Duration = 4,

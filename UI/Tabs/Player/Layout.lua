@@ -4,7 +4,7 @@
 
 local Layout = {}
 
-function Layout.Build(Tab, Options)
+function Layout.Build(Tab, Options, charCleaner, rayfield)
     local refs = {}
 
     Tab:CreateSection("Movement")
@@ -94,7 +94,7 @@ function Layout.Build(Tab, Options)
     })
 
     Tab:CreateToggle({
-        Name = "No Delay (Attribute Cleaner)",
+        Name = "Clear Native CC Flags",
         CurrentValue = Options.NoDelay,
         Flag = "NoDelayFlag",
         Callback = function(Value)
@@ -180,8 +180,8 @@ function Layout.Build(Tab, Options)
         Callback = function()
             if charCleaner then
                 charCleaner:Clean()
-                if Rayfield and Rayfield.Notify then
-                    Rayfield:Notify({
+                if rayfield and rayfield.Notify then
+                    rayfield:Notify({
                         Title = "Status Cleaned",
                         Content = "Character state and environment interactions restored.",
                         Duration = 3,

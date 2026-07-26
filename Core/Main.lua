@@ -58,6 +58,8 @@ Options.ToggleUIKey = Normalize.ToggleUIKey(Options.ToggleUIKey)
 Options.TargetingMethod = Normalize.TargetingMethod(Options.TargetingMethod)
 
 local Window = RayfieldUI.CreateWindow(Rayfield)
+local playerTabController = nil
+local settingsTabController = nil
 
 -- Create a temporary loading notifier
 local loadingNotification = Rayfield:Notify({
@@ -74,6 +76,8 @@ local AimMath         = requireModule("Modules/Combat/AimMath.lua")
 local Tracker        = requireModule("Modules/Utils/NPCTracker.lua")
 local Detector       = requireModule("Modules/Utils/BossDetector.lua")
 local TargetClassifier = requireModule("Modules/Utils/TargetClassifier.lua")
+local NativeTargetPolicy = requireModule("Modules/Utils/NativeTargetPolicy.lua")
+local NativeStatus    = requireModule("Modules/Utils/NativeStatus.lua")
 local Predictor       = requireModule("Modules/Combat/Predictor.lua")
 local SelectiveResolver = requireModule("Modules/Combat/Prediction/SilentResolver.lua")
 local Aimbot          = requireModule("Modules/Combat/Aimbot.lua")
@@ -115,13 +119,13 @@ local function setupMovement()
     movementSuite.float = requireModule("Modules/Movement/FloatController.lua").new(Options, mc)
     movementSuite.jump = requireModule("Modules/Movement/JumpBoost.lua").new(Options, mc, arb)
     movementSuite.slow  = requireModule("Modules/Movement/AntiSlowdown.lua").new(Options, mc, arb)
-    movementSuite.stun  = requireModule("Modules/Movement/AntiStun.lua").new(Options, mc)
+    movementSuite.stun  = requireModule("Modules/Movement/AntiStun.lua").new(Options, mc, NativeStatus)
     movementSuite.noclip = requireModule("Modules/Movement/Noclip.lua").new(Options, mc)
     if placeProfile.EnableGamemodeTools then
         movementSuite.killPart = requireModule("Modules/Movement/KillPartBypass.lua").new(Options, mc)
     end
-    movementSuite.clean = requireModule("Modules/Movement/AttributeCleaner.lua").new(Options, mc)
-    movementSuite.charCleaner = requireModule("Modules/Utils/CharacterCleaner.lua").new(Options, mc)
+    movementSuite.clean = requireModule("Modules/Movement/AttributeCleaner.lua").new(Options, mc, NativeStatus)
+    movementSuite.charCleaner = requireModule("Modules/Utils/CharacterCleaner.lua").new(Options, mc, NativeStatus)
     movementSuite.waypoint = requireModule("Modules/Movement/WaypointTeleport.lua").new(Options, mc)
     
     return mc, arb
@@ -132,6 +136,7 @@ local taskScheduler = TaskScheduler.new(Options)
 local input = InputHandler.new(Config)
 local detector = Detector.new()
 local tracker = Tracker.new(Config, detector, taskScheduler, TargetClassifier)
+tracker:SetNativeTargetPolicy(NativeTargetPolicy)
 local aimbot = Aimbot.new(Config, AimMath)
 local silentResolver = SelectiveResolver.new(Config)
 local silentAim = SilentAim.new(Config, Synapse, silentResolver)
@@ -214,22 +219,34 @@ task.spawn(function()
         local PlayerLayout = requireModule("UI/Tabs/Player/Layout.lua")
         local PlayerStatusLoop = requireModule("UI/Tabs/Player/StatusLoop.lua")
         local PlayerLabelUtils = requireModule("UI/Tabs/Player/LabelUtils.lua")
-        return PlayerController.new(PlayerLayout, PlayerStatusLoop, PlayerLabelUtils)
+        return PlayerController.new(PlayerLayout, PlayerStatusLoop, PlayerLabelUtils, Rayfield)
     end)
 
     if ok and controller then
+        playerTabController = controller
         safeLoadTab("UI/Tabs/PlayerTab.lua", movementSuite.slow, movementSuite.stun, movementSuite.multi, movementSuite.gravity, movementSuite.float, movementSuite.jump, movementSuite.noclip, controller, movementSuite.charCleaner)
     end
 
-    safeLoadTab("UI/Tabs/TeleportTab.lua", movementSuite.waypoint)
+    safeLoadTab("UI/Tabs/TeleportTab.lua", movementSuite.waypoint, Rayfield)
     safeLoadTab("UI/Tabs/BlatantTab.lua")
     if placeProfile.EnableGamemodeTools then
         safeLoadTab("UI/Tabs/GamemodeTab.lua", movementSuite.killPart, ultraHell, movementSuite.waypoint)
     end
     
-    local settingsOk, settingsTabController = pcall(function()
-        return requireModule("UI/Tabs/SettingsTab.lua")(Window, Options, cleaner, resourceManager, tracker, taskScheduler)
+    local settingsOk, loadedSettingsController = pcall(function()
+        return requireModule("UI/Tabs/SettingsTab.lua")(
+            Window,
+            Options,
+            cleaner,
+            resourceManager,
+            tracker,
+            taskScheduler,
+            Rayfield
+        )
     end)
+    if settingsOk then
+        settingsTabController = loadedSettingsController
+    end
     
     -- Final config load
     pcall(function()
@@ -257,6 +274,8 @@ local runtimeLifecycle = RuntimeLifecycle.new(
         }
         if ultraHell then objects[#objects + 1] = ultraHell end
         if movementSuite.killPart then objects[#objects + 1] = movementSuite.killPart end
+        if playerTabController then objects[#objects + 1] = playerTabController end
+        if settingsTabController then objects[#objects + 1] = settingsTabController end
         return objects
     end,
     function() end

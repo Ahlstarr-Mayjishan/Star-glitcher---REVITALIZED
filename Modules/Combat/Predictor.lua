@@ -74,6 +74,8 @@ function Predictor:_GetState(entry)
     state = {
         Estimator = self._EstimatorClass.new(kalman, self.Config),
         Stabilizer = self._StabilizerClass.new(self._AimMath),
+        LastPosition = nil,
+        LastTime = nil,
     }
     self._EntryStates[entry] = state
     return state
@@ -91,10 +93,15 @@ function Predictor:NotifyTargetChanged(entry, part)
     if state.Stabilizer and state.Stabilizer.Reset then
         state.Stabilizer:Reset(part and part.Position or nil)
     end
+    state.LastPosition = part and part.Position or nil
+    state.LastTime = part and os.clock() or nil
 end
 
 function Predictor:RegisterShot(entry, targetPos)
-    if self.FeedbackLoop and self.FeedbackLoop.RegisterShot then
+    if self.Options
+        and self.Options.PredictionFeedbackEnabled == true
+        and self.FeedbackLoop
+        and self.FeedbackLoop.RegisterShot then
         self.FeedbackLoop:RegisterShot(entry, targetPos)
     end
 end
@@ -119,21 +126,23 @@ function Predictor:PredictResult(origin, part, entry, dt)
         self:_PruneStates(now)
     end
 
-    if self.FeedbackLoop then
+    if self.Options
+        and self.Options.PredictionFeedbackEnabled == true
+        and self.FeedbackLoop then
         self.FeedbackLoop:Update(dt)
     end
 
     local state = self:_GetState(entry)
     
     -- 1. SAMPLING (Input Only)
-    local raw = self.Sampler:GetRawState(part, entry.LastPos, entry.LastTime, dt)
+    local raw = self.Sampler:GetRawState(part, state.LastPosition, state.LastTime, dt)
     
     -- 2. ESTIMATION (Cleaning State)
     local est = state.Estimator:Estimate(raw, dt)
     
     -- Update entry metadata (Monitoring only, No logic)
-    entry.LastPos = raw.Position
-    entry.LastTime = raw.Time
+    state.LastPosition = raw.Position
+    state.LastTime = raw.Time
     
     -- 3. TECHNIQUE SELECTION
     local techniqueDecision = self.TechniqueSelector:Decide(origin, raw.Position, est, entry)
@@ -142,7 +151,9 @@ function Predictor:PredictResult(origin, part, entry, dt)
     local predicted = self.Engine:Calculate(origin, raw.Position, est, dt, entry, part, techniqueDecision)
     
     -- 5. ADAPTIVE CLOSED-LOOP FEEDBACK SCALING
-    if self.FeedbackLoop then
+    if self.Options
+        and self.Options.PredictionFeedbackEnabled == true
+        and self.FeedbackLoop then
         local leadScale = self.FeedbackLoop:GetLeadScaleFactor(entry)
         if leadScale < 1.0 then
             predicted = raw.Position:Lerp(predicted, leadScale)

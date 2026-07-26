@@ -38,6 +38,7 @@ function NPCTracker.new(config, detector, taskScheduler, targetClassifier)
     self.Detector = detector
     self.TaskScheduler = taskScheduler
     self.TargetClassifier = targetClassifier
+    self.NativeTargetPolicy = nil
     
     self.CurrentTargetEntry = nil
     self._entries = {}
@@ -49,6 +50,7 @@ function NPCTracker.new(config, detector, taskScheduler, targetClassifier)
     self._cachedTargets = {}
     self._cacheDirty = true
     self._folderRefs = {}
+    self._folderConnections = {}
     self._lastFolderRefresh = 0
     self._folderRefreshInterval = 2
     self._staleSweepInterval = 3
@@ -65,6 +67,10 @@ function NPCTracker.new(config, detector, taskScheduler, targetClassifier)
     end
     
     return self
+end
+
+function NPCTracker:SetNativeTargetPolicy(nativeTargetPolicy)
+    self.NativeTargetPolicy = nativeTargetPolicy
 end
 
 function NPCTracker:Init()
@@ -105,8 +111,33 @@ function NPCTracker:Prune(now)
 end
 
 function NPCTracker:_refreshFolderRefs()
+    local changed = false
     for i = 1, #self._folders do
-        self._folderRefs[i] = Workspace:FindFirstChild(self._folders[i])
+        local nextFolder = Workspace:FindFirstChild(self._folders[i])
+        if self._folderRefs[i] ~= nextFolder then
+            changed = true
+            self._folderRefs[i] = nextFolder
+        end
+    end
+
+    if changed then
+        for _, connection in ipairs(self._folderConnections) do
+            connection:Disconnect()
+        end
+        table.clear(self._folderConnections)
+
+        local selfRef = self
+        for _, folder in ipairs(self._folderRefs) do
+            if folder then
+                self._folderConnections[#self._folderConnections + 1] = folder.ChildAdded:Connect(function()
+                    selfRef._cacheDirty = true
+                end)
+                self._folderConnections[#self._folderConnections + 1] = folder.ChildRemoved:Connect(function(child)
+                    selfRef._entries[child] = nil
+                    selfRef._cacheDirty = true
+                end)
+            end
+        end
     end
     self._cacheDirty = true
 end
@@ -214,7 +245,70 @@ function NPCTracker:_HasExplicitCombatMarker(model)
         end
     end
 
+    local entityType = model:FindFirstChild("EntityType")
+    if entityType and entityType:IsA("ValueBase") then
+        return true
+    end
+
     return false
+end
+
+function NPCTracker:_GetStatusFolder(model)
+    return model and model:FindFirstChild("Status") or nil
+end
+
+function NPCTracker:_ReadStatusValue(model, name)
+    local status = self:_GetStatusFolder(model)
+    if not status then
+        return nil
+    end
+
+    local direct = status:FindFirstChild(name)
+    if direct and direct:IsA("ValueBase") then
+        return direct.Value
+    end
+
+    local attributes = status:FindFirstChild("Attributes")
+    local valueObject = attributes and attributes:FindFirstChild(name)
+    if valueObject and valueObject:IsA("ValueBase") then
+        return valueObject.Value
+    end
+    return nil
+end
+
+function NPCTracker:_IsParentRelatedToLocalPlayer(model)
+    local localCharacter = Players.LocalPlayer.Character
+    if not localCharacter then
+        return false
+    end
+
+    local targetParentEntity = model:FindFirstChild("ParentEntity")
+    if targetParentEntity
+        and targetParentEntity:IsA("ObjectValue")
+        and targetParentEntity.Value == localCharacter then
+        return true
+    end
+
+    local localParentEntity = localCharacter:FindFirstChild("ParentEntity")
+    return localParentEntity
+        and localParentEntity:IsA("ObjectValue")
+        and localParentEntity.Value == model
+end
+
+function NPCTracker:_PassesNativeTargetPolicy(model)
+    if not self.NativeTargetPolicy then
+        return true
+    end
+
+    local extraNPC = Workspace:FindFirstChild("ExtraNPC")
+    local localCharacter = Players.LocalPlayer.Character
+    return self.NativeTargetPolicy.IsEligible({
+        IsExtraNPC = extraNPC ~= nil and model.Parent == extraNPC,
+        IsSafeZoned = self:_ReadStatusValue(model, "SafeZoned") == true,
+        TargetTeam = tonumber(self:_ReadStatusValue(model, "Team")),
+        LocalTeam = tonumber(self:_ReadStatusValue(localCharacter, "Team")),
+        IsParentRelated = self:_IsParentRelatedToLocalPlayer(model),
+    })
 end
 
 function NPCTracker:_ReadHealthSignal(model, humanoid)
@@ -237,9 +331,9 @@ end
 function NPCTracker:_GetPrimaryPart(model)
     if not model then return nil end
     return model:FindFirstChild("HumanoidRootPart")
-        or model.PrimaryPart
         or model:FindFirstChild("Torso")
         or model:FindFirstChild("Head")
+        or model.PrimaryPart
         or model:FindFirstChildWhichIsA("BasePart", true)
 end
 
@@ -253,9 +347,13 @@ function NPCTracker:_IsTargetCandidate(model, existingEntry)
     local isPlayerCharacter = Players:GetPlayerFromCharacter(model) ~= nil
     if isPlayerCharacter then
         return self.Options.TargetPlayersToggle == true
+            and self:_PassesNativeTargetPolicy(model)
     end
 
     local strongCombatFolder, authoritativeEntityFolder = self:_GetCombatFolderConfidence(model)
+    if authoritativeEntityFolder and not self:_PassesNativeTargetPolicy(model) then
+        return false
+    end
 
     -- Names such as Cube, Bomb, Stone, or Dummy may be legitimate summoned
     -- bosses. Only bypass the prop-name filter for direct children of the
@@ -506,6 +604,10 @@ function NPCTracker:Destroy()
     self._schedulerAlive = false
     self._staleSweepScheduled = false
     self._staleSweepGeneration = self._staleSweepGeneration + 1
+    for _, connection in ipairs(self._folderConnections) do
+        connection:Disconnect()
+    end
+    table.clear(self._folderConnections)
     self:ClearCache()
 end
 

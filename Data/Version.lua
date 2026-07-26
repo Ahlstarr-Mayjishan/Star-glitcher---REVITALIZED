@@ -1,1 +1,1 @@
-return 130 -- Version 1.2.0 (Auto Update Runtime / Player Mobility Additions)
+return 140 -- Version 1.4.0 (Native compatibility and aim pipeline corrections)

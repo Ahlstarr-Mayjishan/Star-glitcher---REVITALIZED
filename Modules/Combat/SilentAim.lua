@@ -126,7 +126,9 @@ local function ensureHookState()
             and not selfRef._destroyed
             and not checkcaller()
             and selfRef:_hasTargetLock() then
-            if (method == "ViewportPointToRay" or method == "ScreenPointToRay") and inst == Workspace.CurrentCamera then
+            if selfRef:_isRedirectActive()
+                and (method == "ViewportPointToRay" or method == "ScreenPointToRay")
+                and inst == Workspace.CurrentCamera then
                 local camPos = Workspace.CurrentCamera.CFrame.Position
                 return buildTargetRay(camPos, selfRef.TargetPosCache, 1)
             end
@@ -181,7 +183,7 @@ local function ensureHookState()
                         local mult = tonumber(selfRef.Options and selfRef.Options.PacketDuplicationMultiplier) or 1
                         if mult > 1 then
                             local packedArgs = table.pack(unpack(args, 1, args.n))
-                            for dup = 2, math.min(mult, 4) do
+                            for _ = 2, math.min(mult, 4) do
                                 task.defer(function()
                                     if inst and inst.Parent then
                                         oldNamecall(inst, unpack(packedArgs, 1, packedArgs.n))

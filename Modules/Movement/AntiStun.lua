@@ -11,10 +11,17 @@ local clock = os.clock
 local AntiStun = {}
 AntiStun.__index = AntiStun
 
-function AntiStun.new(options, localCharacter)
+local NATIVE_STUN_FLAGS = {
+    Stunned = true,
+    Frozen = true,
+    Ragdolled = true,
+}
+
+function AntiStun.new(options, localCharacter, nativeStatus)
     local self = setmetatable({}, AntiStun)
     self.Options = options
     self.LocalCharacter = localCharacter
+    self.NativeStatus = nativeStatus
     self.Connection = nil
     self.TrackedHumanoid = nil
 
@@ -53,7 +60,11 @@ end
 
 function AntiStun:Init()
     self.Connection = RunService.Heartbeat:Connect(function()
-        local _, hum = self.LocalCharacter and self.LocalCharacter:GetState()
+        local hum = nil
+        if self.LocalCharacter then
+            local _, currentHumanoid = self.LocalCharacter:GetState()
+            hum = currentHumanoid
+        end
         
         -- PROACTIVE SCAN: If module says hum is missing, check the direct player object
         if not hum then
@@ -89,6 +100,11 @@ function AntiStun:Init()
 
         self:_setStatus("Active: Monitoring")
 
+        local character = self.LocalCharacter and self.LocalCharacter:GetCharacter()
+        local nativeFlagsCleared = self.NativeStatus
+            and self.NativeStatus.ClearBooleanFlags(character, NATIVE_STUN_FLAGS)
+            or 0
+
         if hum ~= self.TrackedHumanoid then
             if self.TrackedHumanoid then
                 self:_restoreStateGuards(self.TrackedHumanoid)
@@ -98,7 +114,7 @@ function AntiStun:Init()
         end
 
         local state = hum:GetState()
-        local actionTaken = false
+        local actionTaken = nativeFlagsCleared > 0
 
         if state == Enum.HumanoidStateType.FallingDown or state == Enum.HumanoidStateType.Ragdoll then
             hum:ChangeState(Enum.HumanoidStateType.GettingUp)

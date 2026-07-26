@@ -1,12 +1,11 @@
-local Players = game:GetService("Players")
-
 local CharacterCleaner = {}
 CharacterCleaner.__index = CharacterCleaner
 
-function CharacterCleaner.new(options, localCharacter)
+function CharacterCleaner.new(options, localCharacter, nativeStatus)
     local self = setmetatable({}, CharacterCleaner)
     self.Options = options
     self.LocalCharacter = localCharacter
+    self.NativeStatus = nativeStatus
     return self
 end
 
@@ -19,17 +18,27 @@ function CharacterCleaner:Clean()
     self.Options.KillPartBypassEnabled = false
     self.Options.NoclipEnabled = false
     self.Options.CustomMoveSpeedEnabled = false
-    self.Options.InfiniteJumpEnabled = false
-    self.Options.HighGravityEnabled = false
-    self.Options.FlightEnabled = false
+    self.Options.SpeedMultiplierEnabled = false
+    self.Options.SpeedSpoofEnabled = false
+    self.Options.GravityEnabled = false
+    self.Options.FloatEnabled = false
+    self.Options.JumpBoostEnabled = false
+    self.Options.NoSlowdown = false
+    self.Options.NoStun = false
+    self.Options.NoDelay = false
 
     -- 2. Reset Humanoid Properties
     if humanoid then
+        local nativeWalkSpeed = self.NativeStatus and tonumber(self.NativeStatus.Read(character, "WalkSpeed"))
+        local nativeJumpPower = self.NativeStatus and tonumber(self.NativeStatus.Read(character, "JumpPower"))
         pcall(function()
-            humanoid.WalkSpeed = 16
-            humanoid.JumpPower = 50
+            humanoid.WalkSpeed = nativeWalkSpeed or humanoid.WalkSpeed
+            humanoid.JumpPower = nativeJumpPower or humanoid.JumpPower
             humanoid.AutoRotate = true
             humanoid.PlatformStand = false
+            humanoid.Sit = false
+            humanoid:SetStateEnabled(Enum.HumanoidStateType.FallingDown, true)
+            humanoid:SetStateEnabled(Enum.HumanoidStateType.Ragdoll, true)
         end)
     end
 

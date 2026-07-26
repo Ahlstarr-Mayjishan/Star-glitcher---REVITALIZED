@@ -55,6 +55,15 @@ return function(Window, Options)
         end,
     })
 
+    Tab:CreateToggle({
+        Name = "Adaptive Hit Feedback (Experimental)",
+        CurrentValue = Options.PredictionFeedbackEnabled == true,
+        Flag = "PredictionFeedbackEnabledFlag",
+        Callback = function(Value)
+            Options.PredictionFeedbackEnabled = Value
+        end,
+    })
+
     Tab:CreateSlider({
         Name = "Projectile Velocity",
         Range = {50, 5000},

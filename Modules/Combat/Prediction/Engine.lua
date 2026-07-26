@@ -185,6 +185,10 @@ end
 
 function Engine:Calculate(origin, targetPos, est, dt, entry, part, techniqueDecision)
     local Options = self.Options
+    local configuredAimOffset = tonumber(Options.AimOffset) or 0
+    if configuredAimOffset ~= 0 then
+        targetPos = targetPos + Vector3.new(0, configuredAimOffset, 0)
+    end
     if not Options.PredictionEnabled then
         return targetPos
     end

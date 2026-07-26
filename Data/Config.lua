@@ -5,7 +5,7 @@
 
 local Config = {}
 
-Config.VERSION = "1.3.0"
+Config.VERSION = "1.4.0"
 Config.GITHUB_BASE = _G.StarGlitcher_GithubBase
     or "https://raw.githubusercontent.com/Ahlstarr-Mayjishan/Star-glitcher---REVITALIZED/main/"
 
@@ -18,6 +18,7 @@ Config.Options = {
     PredictionTechniqueMode = "Assisted",
     PredictionTechnique = "Linear",
     PredictionTechniqueDebug = false,
+    PredictionFeedbackEnabled = false,
     TargetPart = "HumanoidRootPart",
     TargetingMethod = "FOV",
     AdaptiveTargetScan = true,
@@ -47,7 +48,7 @@ Config.Options = {
     SpeedMultiplier = 1.0,
     SpeedSpoofEnabled = false,
     RuntimeStatsDebug = false,
-    AutoCleanEnabled = true,
+    AutoCleanEnabled = false,
     SmartCleanupEnabled = true,
     AutoUpdateEnabled = false,
     AutoUpdateIntervalMinutes = 5,

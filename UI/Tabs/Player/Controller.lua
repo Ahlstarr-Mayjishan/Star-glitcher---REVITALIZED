@@ -6,18 +6,19 @@
 local Controller = {}
 Controller.__index = Controller
 
-function Controller.new(layout, statusLoop, labelUtils)
+function Controller.new(layout, statusLoop, labelUtils, rayfield)
     local self = setmetatable({}, Controller)
     self.Layout = layout
     self.StatusLoop = statusLoop
     self.LabelUtils = labelUtils
+    self.Rayfield = rayfield
     self._statusLoopHandle = nil
     return self
 end
 
 function Controller:Build(Window, Options, noSlowdown, noStun, speedMultiplier, gravityController, floatController, jumpBoost, noclip, charCleaner)
     local Tab = Window:CreateTab("Player", 4483362458)
-    local refs = self.Layout.Build(Tab, Options, charCleaner)
+    local refs = self.Layout.Build(Tab, Options, charCleaner, self.Rayfield)
 
     if self._statusLoopHandle and self._statusLoopHandle.Destroy then
         self._statusLoopHandle:Destroy()

@@ -62,7 +62,15 @@ end
 
 function AntiSlowdown:Init()
     self.Connection = RunService.Heartbeat:Connect(function()
+        local hum = self.LocalCharacter and self.LocalCharacter:GetHumanoid()
+        if hum and hum ~= self.TrackedHumanoid then
+            self:CaptureBaseStats(hum)
+        end
+
         if not self.Options.NoSlowdown then
+            if hum then
+                self:_learnLegitMovement(hum)
+            end
             if self.MovementArbiter then
                 self.MovementArbiter:ClearSource(self._arbiterKey)
             end
@@ -70,7 +78,6 @@ function AntiSlowdown:Init()
             return
         end
 
-        local hum = self.LocalCharacter and self.LocalCharacter:GetHumanoid()
         if not hum then
             if self.MovementArbiter then
                 self.MovementArbiter:ClearSource(self._arbiterKey)
@@ -108,10 +115,6 @@ function AntiSlowdown:Init()
         end
 
         self:_setStatus("Monitoring Speed")
-
-        if hum ~= self.TrackedHumanoid then
-            self:CaptureBaseStats(hum)
-        end
 
         self:_learnLegitMovement(hum)
 

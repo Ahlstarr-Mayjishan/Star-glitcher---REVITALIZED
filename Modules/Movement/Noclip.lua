@@ -16,12 +16,36 @@ function Noclip.new(options, localCharacter)
     self.LocalCharacter = localCharacter
     self.Connection = nil
     self.Status = "Idle"
+    self._originalCanCollide = setmetatable({}, { __mode = "k" })
+    self._wasEnabled = false
     return self
+end
+
+function Noclip:_disableCollision(part)
+    if self._originalCanCollide[part] == nil then
+        self._originalCanCollide[part] = part.CanCollide
+    end
+    if part.CanCollide then
+        part.CanCollide = false
+    end
+end
+
+function Noclip:_restoreCollision()
+    for part, originalValue in pairs(self._originalCanCollide) do
+        if part and part.Parent then
+            part.CanCollide = originalValue
+        end
+        self._originalCanCollide[part] = nil
+    end
+    self._wasEnabled = false
 end
 
 function Noclip:Init()
     self.Connection = RunService.Stepped:Connect(function()
         if not self.Options.NoclipEnabled then
+            if self._wasEnabled then
+                self:_restoreCollision()
+            end
             if self.Status ~= "Disabled" then
                 self.Status = "Disabled"
             end
@@ -38,17 +62,16 @@ function Noclip:Init()
         end
 
         self.Status = "Active: Noclip"
+        self._wasEnabled = true
         
         for _, obj in ipairs(parts or character:GetDescendants()) do
             if obj:IsA("BasePart") then
-                if obj.CanCollide then
-                    obj.CanCollide = false
-                end
+                self:_disableCollision(obj)
             end
         end
 
         if rootPart then
-            rootPart.CanCollide = false
+            self:_disableCollision(rootPart)
         end
     end)
 end
@@ -58,6 +81,7 @@ function Noclip:Destroy()
         self.Connection:Disconnect()
         self.Connection = nil
     end
+    self:_restoreCollision()
 end
 
 return Noclip

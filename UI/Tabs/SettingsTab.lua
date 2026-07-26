@@ -3,7 +3,7 @@
     UI toggle key, config actions, and maintenance tools.
 ]]
 
-return function(Window, Options, cleaner, resourceManager, tracker, taskScheduler)
+return function(Window, Options, cleaner, resourceManager, tracker, taskScheduler, rayfield)
     local Tab = Window:CreateTab("Settings", 4483362458)
     local controller = {
         Tab = Tab,
@@ -86,7 +86,7 @@ return function(Window, Options, cleaner, resourceManager, tracker, taskSchedule
         Callback = function()
             if cleaner then
                 local destroyed, found, deferred, remaining = cleaner:Clean()
-                Rayfield:Notify({
+                rayfield:Notify({
                     Title = "Cleanup Scheduled",
                     Content = string.format(
                         "Found %d debris, destroyed %d now, deferred %d, remaining local %d.",
@@ -117,8 +117,8 @@ return function(Window, Options, cleaner, resourceManager, tracker, taskSchedule
         Callback = function(Value)
             local selected = type(Value) == "table" and Value[1] or Value
             Options.ToggleUIKey = selected
-            if Rayfield and Rayfield.Notify then
-                Rayfield:Notify({
+            if rayfield and rayfield.Notify then
+                rayfield:Notify({
                     Title = "UI Key Updated",
                     Content = "UI toggle key saved as " .. tostring(selected) .. ". It applies immediately and will persist after reload.",
                     Duration = 4,
@@ -136,8 +136,8 @@ return function(Window, Options, cleaner, resourceManager, tracker, taskSchedule
                     local ok, err = pcall(function()
                         _G.BossAimAssist_Cleanup(false)
                     end)
-                    if not ok and Rayfield and Rayfield.Notify then
-                        Rayfield:Notify({
+                    if not ok and rayfield and rayfield.Notify then
+                        rayfield:Notify({
                             Title = "Emergency Stop Failed",
                             Content = tostring(err),
                             Duration = 5,
@@ -168,8 +168,8 @@ return function(Window, Options, cleaner, resourceManager, tracker, taskSchedule
         Callback = function()
             if _G.BossAimAssist_CheckForUpdates then
                 _G.BossAimAssist_CheckForUpdates(true)
-            elseif Rayfield and Rayfield.Notify then
-                Rayfield:Notify({
+            elseif rayfield and rayfield.Notify then
+                rayfield:Notify({
                     Title = "Updater Unavailable",
                     Content = "This runtime does not expose the update checker yet. Reload from Main.lua.",
                     Duration = 4,
@@ -184,7 +184,7 @@ return function(Window, Options, cleaner, resourceManager, tracker, taskSchedule
     Tab:CreateButton({
         Name = "Save Current Config",
         Callback = function()
-            Rayfield:SaveConfiguration()
+            rayfield:SaveConfiguration()
         end,
     })
 
@@ -216,7 +216,7 @@ return function(Window, Options, cleaner, resourceManager, tracker, taskSchedule
                     end
                 end
 
-                Rayfield:Notify({
+                rayfield:Notify({
                     Title = "Server Hop Failed",
                     Content = "No suitable new servers found at this time.",
                     Duration = 4,
@@ -294,7 +294,7 @@ return function(Window, Options, cleaner, resourceManager, tracker, taskSchedule
                 if writefile then
                     pcall(function()
                         writefile("BossAimAssist_Loader.lua", command)
-                        Rayfield:Notify({
+                        rayfield:Notify({
                             Title = "Auto-Execute Enabled",
                             Content = "Loader saved to workspace/BossAimAssist_Loader.lua. Move this to your autoexec folder.",
                             Duration = 5,
@@ -302,7 +302,7 @@ return function(Window, Options, cleaner, resourceManager, tracker, taskSchedule
                         })
                     end)
                 else
-                    Rayfield:Notify({
+                    rayfield:Notify({
                         Title = "Error",
                         Content = "Your executor does not support writefile.",
                         Duration = 5,
@@ -313,7 +313,7 @@ return function(Window, Options, cleaner, resourceManager, tracker, taskSchedule
                 if delfile then
                     pcall(function()
                         delfile("BossAimAssist_Loader.lua")
-                        Rayfield:Notify({
+                        rayfield:Notify({
                             Title = "Auto-Execute Disabled",
                             Content = "Loader file removed from workspace.",
                             Duration = 5,

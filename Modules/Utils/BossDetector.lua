@@ -60,8 +60,8 @@ local function getModelBounds(model)
         return Vector3.new(0, 0, 0), 0
     end
 
-    local size = maxPos - minPos
-    return size, size.X * size.Y * size.Z
+    local fallbackSize = maxPos - minPos
+    return fallbackSize, fallbackSize.X * fallbackSize.Y * fallbackSize.Z
 end
 
 local function getLargestPart(model)
@@ -144,6 +144,13 @@ function BossDetector:IsBoss(model, humanoid)
 
     if not model or not model:IsA("Model") then
         return false
+    end
+
+    -- Native boss indicators and minigame spawning use this attribute as the
+    -- authoritative classification. Respect explicit false as well as true.
+    local nativeBoss = model:GetAttribute("IsBoss")
+    if nativeBoss ~= nil then
+        return nativeBoss == true
     end
 
     local now = os.clock()
