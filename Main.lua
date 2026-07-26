@@ -3,7 +3,7 @@
     v2.3.0 (Release-Coherent Multi-CDN Bootstrap)
 ]]
 
-local STABLE_RELEASE_REF = "9fa81223fa7407cbde707c4753b7279af4bae1af"
+local STABLE_RELEASE_REF = "7b474d0afcbe923e40cf57064e53cd407b30cdc5"
 local STABLE_RELEASE_BASE = "https://cdn.jsdelivr.net/gh/Ahlstarr-Mayjishan/Star-glitcher---REVITALIZED@" .. STABLE_RELEASE_REF .. "/"
 local DYNAMIC_REMOTE_BASES = {
     "https://raw.githubusercontent.com/Ahlstarr-Mayjishan/Star-glitcher---REVITALIZED/main/",
