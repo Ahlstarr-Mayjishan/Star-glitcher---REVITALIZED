@@ -29,6 +29,7 @@ try {
         "Modules/Combat/AimPresentation.lua",
         "Modules/Combat/AimState.lua",
         "Modules/Combat/Predictor.lua",
+        "Modules/Combat/SilentAimPolicy.lua",
         "Modules/Combat/TargetSelector.lua",
         "Modules/Combat/Prediction/Engine.lua",
         "Modules/Utils/BossDetector.lua",
@@ -42,7 +43,7 @@ try {
         throw "Selene failed."
     }
 
-    & luau-analyze --formatter=gnu Modules/Combat/AimPolicy.lua Modules/Combat/AimState.lua Modules/Utils/NativeTargetPolicy.lua
+    & luau-analyze --formatter=gnu Modules/Combat/AimPolicy.lua Modules/Combat/AimState.lua Modules/Combat/SilentAimPolicy.lua Modules/Utils/NativeTargetPolicy.lua
     if ($LASTEXITCODE -ne 0) {
         throw "Luau analysis failed."
     }

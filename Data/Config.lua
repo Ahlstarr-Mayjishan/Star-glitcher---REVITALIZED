@@ -5,7 +5,7 @@
 
 local Config = {}
 
-Config.VERSION = "1.4.0"
+Config.VERSION = "1.4.1"
 Config.GITHUB_BASE = _G.StarGlitcher_GithubBase
     or "https://raw.githubusercontent.com/Ahlstarr-Mayjishan/Star-glitcher---REVITALIZED/main/"
 

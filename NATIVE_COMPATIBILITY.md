@@ -22,7 +22,7 @@ Phạm vi của đợt kiểm tra này là place chính `11380216916 Star Glitch
 | Predictor | Dùng chung vị trí theo dõi của tracker | Sai | Mẫu vị trí/thời gian thuộc riêng state predictor của từng target, tránh velocity bằng 0 giả khi model di chuyển bằng CFrame/PivotTo. |
 | Aim Offset | Có option/UI nhưng không đi vào kết quả | Không hoạt động | Offset được áp dụng trong prediction engine kể cả khi tắt prediction. |
 | Adaptive hit feedback | Mọi health delta gần shot đều có thể bị coi là hit | Không đáng tin hoàn toàn | Chuyển thành tùy chọn experimental và tắt mặc định để tránh học từ damage của người khác hoặc damage trễ. |
-| Silent camera ray | Redirect mọi camera ray khi đang lock | Quá rộng | Chỉ redirect trong cửa sổ bắn; giảm ảnh hưởng lên ray dùng cho UI/camera/logic khác. |
+| Silent aim source | Camera/mouse ray từng bị buộc vào cửa sổ 0,35 giây | Regression ở 1.4.0 | Mouse/camera aim source redirect liên tục khi có target lock; remote và world side-effect ray vẫn chỉ rewrite trong cửa sổ bắn. Hook được version hóa để reload trong cùng session nhận logic mới. |
 | No Stun | Chỉ chặn Humanoid state | Đúng một phần | Bổ sung adapter cho `Status/Status.Attributes` và xóa cờ CC theo cách không phá ValueObject; vẫn giữ Humanoid state guard. |
 | No Slowdown | Ép mốc 16/50 và có thể xung đột form | Đúng một phần | Theo dõi baseline của Humanoid và nhường quyền cho speed override; không coi mọi form native đều có cùng WalkSpeed. |
 | Attribute cleaner | Quét/xóa ValueBase và attribute theo tên chung | Sai, có thể phá game | Không còn destroy object hay xóa attribute chung; chỉ xử lý BoolValue CC trong cấu trúc status đã biết. |
@@ -30,7 +30,7 @@ Phạm vi của đợt kiểm tra này là place chính `11380216916 Star Glitch
 | Clean Status Char | UI gọi biến không tồn tại | Không hoạt động | Controller truyền đúng cleaner và Rayfield; reset các option thực sự tồn tại. |
 | Runtime UI loops | Player/Settings loop sống sau cleanup | Lỗi lifecycle | Cả hai controller được đăng ký vào runtime lifecycle và dừng khi destroy. |
 | Auto debris cleanup | Mặc định bật, tag rộng gồm Orb/Effect/Visual | Không an toàn với native | Tắt mặc định, bỏ tag rộng, bảo vệ các root/entity/status/boss native; Smart Cleanup giờ thực sự điều khiển adaptive scheduling. |
-| Loader/cache | Manifest dùng sai đường dẫn `Core/Bootstrap/*` | Lỗi thời, dễ giữ cache cũ | Sửa thành `Modules/Core/Bootstrap/*`, đăng ký adapter mới và tăng toàn bộ version liên quan lên release `1.4.0`. |
+| Loader/cache | Manifest dùng sai đường dẫn `Core/Bootstrap/*` | Lỗi thời, dễ giữ cache cũ | Sửa thành `Modules/Core/Bootstrap/*`, đăng ký adapter mới và tăng toàn bộ version liên quan lên release `1.4.1`. |
 | Teleport/config notification | Phụ thuộc global Rayfield ngầm | Đúng một phần | Rayfield được truyền rõ ràng vào Player, Settings và Teleport UI. |
 
 ## Giới hạn còn lại

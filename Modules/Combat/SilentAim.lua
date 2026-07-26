@@ -1,3 +1,5 @@
+--!strict
+
 --[[
     SilentAim.lua - High-Performance Neural Combat Hook
     Job: Safely redirect combat packets without interfering with user intent.
@@ -10,7 +12,9 @@ local Players = game:GetService("Players")
 local SilentAim = {}
 SilentAim.__index = SilentAim
 
-local GLOBAL_HOOK_KEY = "__STAR_GLITCHER_SILENT_AIM_HOOK"
+-- Bump this key when hook closure behavior changes. Executor metamethod hooks
+-- cannot be removed, so a new key is required for an in-session loader update.
+local GLOBAL_HOOK_KEY = "__STAR_GLITCHER_SILENT_AIM_HOOK_V2"
 local REDIRECT_WINDOW = 0.35
 local clock = os.clock
 
@@ -100,7 +104,7 @@ local function ensureHookState()
             and not selfRef._destroyed
             and not checkcaller()
             and selfRef:_hasTargetLock()
-            and selfRef:_isRedirectActive() then -- FIX: Only redirect mouse during firing window
+            and selfRef:_shouldRedirectAimSource() then
             if inst == Mouse or (typeof(inst) == "Instance" and inst:IsA("Mouse")) then
                 if index == "Hit" then
                     return buildTargetCFrame(selfRef.TargetPosCache)
@@ -126,7 +130,7 @@ local function ensureHookState()
             and not selfRef._destroyed
             and not checkcaller()
             and selfRef:_hasTargetLock() then
-            if selfRef:_isRedirectActive()
+            if selfRef:_shouldRedirectAimSource()
                 and (method == "ViewportPointToRay" or method == "ScreenPointToRay")
                 and inst == Workspace.CurrentCamera then
                 local camPos = Workspace.CurrentCamera.CFrame.Position
@@ -205,11 +209,12 @@ local function ensureHookState()
     return hookState
 end
 
-function SilentAim.new(config, synapse, resolver)
+function SilentAim.new(config, synapse, resolver, policy)
     local self = setmetatable({}, SilentAim)
     self.Options = config.Options
     self.Synapse = synapse
     self.Resolver = resolver
+    self.Policy = policy
 
     self.Active = false
     self.TargetPartCache = nil
@@ -226,24 +231,43 @@ function SilentAim:_hasTargetLock()
     return self.Active and self.TargetPosCache ~= nil and self.TargetPartCache ~= nil
 end
 
-function SilentAim:_isRedirectActive()
-    if not self:_hasTargetLock() then
-        return false
+function SilentAim:_shouldRedirectAimSource()
+    local hasTargetLock = self:_hasTargetLock()
+    if self.Policy and self.Policy.ShouldRedirectAimSource then
+        return self.Policy.ShouldRedirectAimSource(hasTargetLock)
     end
+    return hasTargetLock
+end
 
+function SilentAim:_isRedirectActive()
     local now = clock()
-    return (now - self._lastClickTime) <= REDIRECT_WINDOW
-        or (now - self._lastRedirectTime) <= REDIRECT_WINDOW
+    if self.Policy and self.Policy.ShouldRewriteSideEffect then
+        return self.Policy.ShouldRewriteSideEffect(
+            self:_hasTargetLock(),
+            now - self._lastClickTime,
+            now - self._lastRedirectTime,
+            REDIRECT_WINDOW
+        )
+    end
+    return self:_hasTargetLock()
+        and ((now - self._lastClickTime) <= REDIRECT_WINDOW
+            or (now - self._lastRedirectTime) <= REDIRECT_WINDOW)
 end
 
 function SilentAim:Init()
-    if not hookmetamethod then
+    if not hookmetamethod
+        or not newcclosure
+        or not getnamecallmethod
+        or not checkcaller
+        or not getgenv then
+        self.Status = "Unsupported executor hooks"
         return
     end
 
     self._destroyed = false
     self._hookState = ensureHookState()
     self._hookState.Instance = self
+    self.Status = "Hook ready"
 end
 
 function SilentAim:NotifyShot(now, entry)

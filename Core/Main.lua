@@ -83,6 +83,7 @@ local SelectiveResolver = requireModule("Modules/Combat/Prediction/SilentResolve
 local Aimbot          = requireModule("Modules/Combat/Aimbot.lua")
 local Selector        = requireModule("Modules/Combat/TargetSelector.lua")
 local SilentAim       = requireModule("Modules/Combat/SilentAim.lua")
+local SilentAimPolicy = requireModule("Modules/Combat/SilentAimPolicy.lua")
 local AimPolicy       = requireModule("Modules/Combat/AimPolicy.lua")
 local AimState        = requireModule("Modules/Combat/AimState.lua")
 local AimActuator     = requireModule("Modules/Combat/AimActuator.lua")
@@ -139,7 +140,7 @@ local tracker = Tracker.new(Config, detector, taskScheduler, TargetClassifier)
 tracker:SetNativeTargetPolicy(NativeTargetPolicy)
 local aimbot = Aimbot.new(Config, AimMath)
 local silentResolver = SelectiveResolver.new(Config)
-local silentAim = SilentAim.new(Config, Synapse, silentResolver)
+local silentAim = SilentAim.new(Config, Synapse, silentResolver, SilentAimPolicy)
 local ultraHell = nil
 if placeProfile.EnableGamemodeTools then
     local UltraHell = requireModule("Modules/Combat/UltraHell.lua")

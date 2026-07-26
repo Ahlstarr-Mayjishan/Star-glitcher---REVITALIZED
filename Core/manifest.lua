@@ -4,10 +4,10 @@
 ]]
 
 return {
-    Version = "1.4.0",
+    Version = "1.4.1",
     Files = {
         -- Core
-        ["Core/Main.lua"] = { Version = 170 },
+        ["Core/Main.lua"] = { Version = 180 },
         ["Modules/Core/Bootstrap/Normalize.lua"] = { Version = 100 },
         ["Modules/Core/Bootstrap/RayfieldUI.lua"] = { Version = 110 },
         ["Modules/Core/Bootstrap/RejoinOnKick.lua"] = { Version = 100 },
@@ -15,9 +15,9 @@ return {
         ["Core/Brain.lua"] = { Version = 130 },
         
         -- Data
-        ["Data/Config.lua"] = { Version = 130 },
+        ["Data/Config.lua"] = { Version = 140 },
         ["Data/PlaceProfiles.lua"] = { Version = 100 },
-        ["Data/Version.lua"] = { Version = 140 },
+        ["Data/Version.lua"] = { Version = 141 },
         
         -- Modules/Combat
         ["Modules/Combat/AimMath.lua"] = { Version = 100 },
@@ -28,7 +28,8 @@ return {
         ["Modules/Combat/AimController.lua"] = { Version = 100 },
         ["Modules/Combat/Aimbot.lua"] = { Version = 120 },
         ["Modules/Combat/Predictor.lua"] = { Version = 150 },
-        ["Modules/Combat/SilentAim.lua"] = { Version = 140 },
+        ["Modules/Combat/SilentAim.lua"] = { Version = 150 },
+        ["Modules/Combat/SilentAimPolicy.lua"] = { Version = 100 },
         ["Modules/Combat/TargetSelector.lua"] = { Version = 125 },
         ["Modules/Combat/UltraHell.lua"] = { Version = 110 },
         ["Modules/Combat/Prediction/SilentResolver.lua"] = { Version = 110 },
