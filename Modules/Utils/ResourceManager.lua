@@ -6,14 +6,60 @@
 local ResourceManager = {}
 ResourceManager.__index = ResourceManager
 
-local HttpService = game:GetService("HttpService")
 local CACHE_PATH = ".star_glitcher_cache"
 local LOCAL_PATH_KEY = "BossAimAssist_LocalPath"
 
-function ResourceManager.new(options, githubBase, manifest)
+function ResourceManager.NormalizeBases(remoteBases)
+    if type(remoteBases) == "string" then
+        remoteBases = {remoteBases}
+    end
+
+    local normalized = {}
+    local seen = {}
+    for _, base in ipairs(type(remoteBases) == "table" and remoteBases or {}) do
+        if type(base) == "string" and base ~= "" then
+            local clean = base:gsub("/+$", "") .. "/"
+            if not seen[clean] then
+                seen[clean] = true
+                normalized[#normalized + 1] = clean
+            end
+        end
+    end
+    return normalized
+end
+
+function ResourceManager.BuildUrl(base, path, cacheKey)
+    local cleanBase = tostring(base):gsub("/+$", "")
+    local cleanPath = tostring(path):gsub("^/+", "")
+    local url = cleanBase .. "/" .. cleanPath
+    if cacheKey ~= nil then
+        url = url .. "?v=" .. tostring(cacheKey)
+    end
+    return url
+end
+
+function ResourceManager.IsValidSource(content)
+    if type(content) ~= "string" or content:match("^%s*$") then
+        return false
+    end
+
+    local normalized = content:match("^%s*(.-)%s*$")
+    if normalized == "404: Not Found" then
+        return false
+    end
+
+    local prefix = normalized:sub(1, 32):lower()
+    return not prefix:find("<!doctype html", 1, true)
+        and not prefix:find("<html", 1, true)
+end
+
+function ResourceManager.new(options, remoteBases, manifest)
     local self = setmetatable({}, ResourceManager)
     self.Options = options
-    self.GithubBase = githubBase
+    self.RemoteBases = ResourceManager.NormalizeBases(remoteBases)
+    assert(#self.RemoteBases > 0, "[Resource] At least one remote source is required")
+    self.GithubBase = self.RemoteBases[1]
+    self.ActiveBase = self.RemoteBases[1]
     self.Manifest = manifest
     self.Cache = {} -- Runtime cache
     self.SessionID = tostring(os.time())
@@ -120,32 +166,35 @@ function ResourceManager:GetSource(path)
         end
     end
 
-    -- 3. Remote Fetch from GitHub
-    local url = self.GithubBase .. path .. "?v=" .. self.SessionID
+    -- 3. Remote Fetch (GitHub primary, CDN mirrors as fallback)
     local lastError = nil
-    
-    for attempt = 1, 3 do
-        local ok, content = pcall(game.HttpGet, game, url)
-        if ok and content and content ~= "404: Not Found" then
-            -- Inject version metadata for next cache hit
-            local versionHeader = "-- @version " .. targetVersion .. "\n"
-            local processedContent = versionHeader .. content
-            
-            -- Save to cache
-            if writefile then
-                pcall(function()
-                    writefile(cachedFile, processedContent)
-                end)
+
+    for _, base in ipairs(self.RemoteBases) do
+        local url = ResourceManager.BuildUrl(base, path, self.SessionID)
+        for attempt = 1, 2 do
+            local ok, content = pcall(game.HttpGet, game, url)
+            if ok and ResourceManager.IsValidSource(content) then
+                self.ActiveBase = base
+
+                -- Inject version metadata for next cache hit
+                local versionHeader = "-- @version " .. targetVersion .. "\n"
+                local processedContent = versionHeader .. content
+
+                -- Save to cache
+                if writefile then
+                    pcall(function()
+                        writefile(cachedFile, processedContent)
+                    end)
+                end
+
+                return processedContent, "remote"
             end
-            
-            -- warn("[Resource] Downloaded: " .. path)
-            return processedContent, "remote"
+            lastError = string.format("%s (attempt %d): %s", url, attempt, tostring(content))
+            task.wait(0.15 * attempt)
         end
-        lastError = content
-        task.wait(0.2 * attempt)
     end
 
-    error("[Resource] Fatal fetch error: Failed to load " .. path .. " after 3 attempts. Target URL: " .. url .. " | Error: " .. tostring(lastError))
+    error("[Resource] Fatal fetch error: Failed to load " .. path .. " from every configured source. Last error: " .. tostring(lastError))
 end
 
 function ResourceManager:Load(path)

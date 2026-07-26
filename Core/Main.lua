@@ -242,7 +242,7 @@ local runtimeLifecycle = RuntimeLifecycle.new(
     resourceManager,
     cleaner,
     Synapse,
-    Config.GITHUB_BASE .. (_G.StarGlitcher_BootloaderURL or "Main.lua"),
+    _G.StarGlitcher_BootloaderURL or (Config.GITHUB_BASE .. "Main.lua"),
     function(url) return loadstring(game:HttpGet(url))() end,
     function() return tonumber(Config.VERSION:gsub("%.", "")) or 130 end, -- Fallback version
     function() 

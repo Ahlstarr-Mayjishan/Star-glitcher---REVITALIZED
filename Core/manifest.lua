@@ -7,7 +7,7 @@ return {
     Version = "1.3.0",
     Files = {
         -- Core
-        ["Core/Main.lua"] = { Version = 140 },
+        ["Core/Main.lua"] = { Version = 150 },
         ["Core/Bootstrap/Normalize.lua"] = { Version = 100 },
         ["Core/Bootstrap/RayfieldUI.lua"] = { Version = 110 },
         ["Core/Bootstrap/RejoinOnKick.lua"] = { Version = 100 },
@@ -15,7 +15,7 @@ return {
         ["Core/Brain.lua"] = { Version = 130 },
         
         -- Data
-        ["Data/Config.lua"] = { Version = 110 },
+        ["Data/Config.lua"] = { Version = 120 },
         ["Data/PlaceProfiles.lua"] = { Version = 100 },
         ["Data/Version.lua"] = { Version = 130 },
         
@@ -57,7 +57,7 @@ return {
         ["Modules/Utils/InputHandler.lua"] = { Version = 115 },
         ["Modules/Utils/LocalCharacter.lua"] = { Version = 110 },
         ["Modules/Utils/NPCTracker.lua"] = { Version = 140 },
-        ["Modules/Utils/ResourceManager.lua"] = { Version = 150 },
+        ["Modules/Utils/ResourceManager.lua"] = { Version = 160 },
         ["Modules/Utils/Synapse.lua"] = { Version = 100 },
         ["Modules/Utils/TaskScheduler.lua"] = { Version = 110 },
         ["Modules/Utils/TargetClassifier.lua"] = { Version = 100 },
@@ -76,7 +76,7 @@ return {
         ["UI/Tabs/GamemodeTab.lua"] = { Version = 100 },
         ["UI/Tabs/PlayerTab.lua"] = { Version = 100 },
         ["UI/Tabs/PredictionTab.lua"] = { Version = 100 },
-        ["UI/Tabs/SettingsTab.lua"] = { Version = 120 },
+        ["UI/Tabs/SettingsTab.lua"] = { Version = 130 },
         ["UI/Tabs/TeleportTab.lua"] = { Version = 110 },
         ["UI/Tabs/Player/Controller.lua"] = { Version = 100 },
         ["UI/Tabs/Player/LabelUtils.lua"] = { Version = 100 },

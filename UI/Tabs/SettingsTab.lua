@@ -290,7 +290,7 @@ return function(Window, Options, cleaner, resourceManager, tracker, taskSchedule
         Callback = function(Value)
             Options.AutoExecuteEnabled = Value
             if Value then
-                local command = [[loadstring(game:HttpGet("https://raw.githubusercontent.com/Ahlstarr-Mayjishan/Scripting-Roblox-/main/STAR%20GLITCHER%20~%20REVITALIZED/Main.lua?v=" .. tostring(os.time())))()]]
+                local command = [[local urls={"https://raw.githubusercontent.com/Ahlstarr-Mayjishan/Star-glitcher---REVITALIZED/main/Main.lua","https://cdn.jsdelivr.net/gh/Ahlstarr-Mayjishan/Star-glitcher---REVITALIZED@main/Main.lua"} local source,lastError for _,url in ipairs(urls) do local ok,result=pcall(game.HttpGet,game,url.."?v="..tostring(os.time())) if ok and type(result)=="string" and result~="" and result~="404: Not Found" then source=result break end lastError=result end assert(source,"Star Glitcher loader download failed: "..tostring(lastError)) return assert(loadstring(source))()]]
                 if writefile then
                     pcall(function()
                         writefile("BossAimAssist_Loader.lua", command)

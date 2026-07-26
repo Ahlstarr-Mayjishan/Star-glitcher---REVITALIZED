@@ -6,7 +6,8 @@
 local Config = {}
 
 Config.VERSION = "1.3.0"
-Config.GITHUB_BASE = "https://raw.githubusercontent.com/Ahlstarr-Mayjishan/Scripting-Roblox-/main/STAR%20GLITCHER%20~%20REVITALIZED/"
+Config.GITHUB_BASE = _G.StarGlitcher_GithubBase
+    or "https://raw.githubusercontent.com/Ahlstarr-Mayjishan/Star-glitcher---REVITALIZED/main/"
 
 Config.Options = {
     AssistMode = "Off",
