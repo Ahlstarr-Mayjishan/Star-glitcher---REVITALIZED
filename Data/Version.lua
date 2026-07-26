@@ -1,1 +1,1 @@
-return 143 -- Version 1.4.3 (Roblox Vector3 estimator compatibility hotfix)
+return 150 -- Version 1.5.0 (Low-latency replicated boss motion tracking)

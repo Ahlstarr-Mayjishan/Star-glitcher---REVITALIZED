@@ -21,10 +21,11 @@ function Predictor.new(config, loader, kalman, aimMath)
     local Stabilizer = loader(Path.."Stabilizer.lua")
     local TechniqueSelector = loader(Path.."TechniqueSelector.lua")
     local FeedbackLoop = loader(Path.."FeedbackLoop.lua")
+    local MotionPolicy = loader(Path.."MotionPolicy.lua")
     
     -- Instantiate shared stateless layers
-    self.Sampler = Sampler.new(config)
-    self.Engine = Engine.new(config)
+    self.Sampler = Sampler.new(config, MotionPolicy)
+    self.Engine = Engine.new(config, MotionPolicy)
     self.TechniqueSelector = TechniqueSelector.new(config)
     self.FeedbackLoop = FeedbackLoop.new(config)
 
@@ -34,6 +35,7 @@ function Predictor.new(config, loader, kalman, aimMath)
     self._StabilizerClass = Stabilizer
     self._KalmanFactory = kalman and kalman.new or nil
     self._AimMath = aimMath
+    self._MotionPolicy = MotionPolicy
     self._EntryStates = setmetatable({}, { __mode = "k" })
     self._lastPrune = 0
     self._pruneInterval = 5
@@ -73,9 +75,10 @@ function Predictor:_GetState(entry)
     local kalman = self._KalmanFactory and self._KalmanFactory(self.Config) or nil
     state = {
         Estimator = self._EstimatorClass.new(kalman, self.Config),
-        Stabilizer = self._StabilizerClass.new(self._AimMath),
+        Stabilizer = self._StabilizerClass.new(self._AimMath, self.Config, self._MotionPolicy),
         LastPosition = nil,
         LastTime = nil,
+        MotionState = {},
     }
     self._EntryStates[entry] = state
     return state
@@ -95,6 +98,7 @@ function Predictor:NotifyTargetChanged(entry, part)
     end
     state.LastPosition = part and part.Position or nil
     state.LastTime = part and os.clock() or nil
+    state.MotionState = {}
 end
 
 function Predictor:RegisterShot(entry, targetPos)
@@ -135,7 +139,13 @@ function Predictor:PredictResult(origin, part, entry, dt)
     local state = self:_GetState(entry)
     
     -- 1. SAMPLING (Input Only)
-    local raw = self.Sampler:GetRawState(part, state.LastPosition, state.LastTime, dt)
+    local raw = self.Sampler:GetRawState(
+        part,
+        state.LastPosition,
+        state.LastTime,
+        dt,
+        state.MotionState
+    )
     
     -- 2. ESTIMATION (Cleaning State)
     local est = state.Estimator:Estimate(raw, dt)
@@ -162,7 +172,7 @@ function Predictor:PredictResult(origin, part, entry, dt)
 
     -- 6. PRESENTATION (Smoothing)
     return {
-        AimPosition = state.Stabilizer:Smooth(predicted, dt),
+        AimPosition = state.Stabilizer:Smooth(predicted, dt, est.IsTeleport),
         RawPosition = predicted,
         Technique = techniqueDecision,
     }

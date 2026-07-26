@@ -46,6 +46,9 @@ try {
         "Modules/Combat/TargetSelector.lua",
         "Modules/Combat/Prediction/Engine.lua",
         "Modules/Combat/Prediction/Estimator.lua",
+        "Modules/Combat/Prediction/MotionPolicy.lua",
+        "Modules/Combat/Prediction/Sampler.lua",
+        "Modules/Combat/Prediction/Stabilizer.lua",
         "Modules/Utils/BossDetector.lua",
         "Modules/Utils/NativeTargetPolicy.lua",
         "Modules/Utils/NPCTracker.lua",
@@ -57,7 +60,7 @@ try {
         throw "Selene failed."
     }
 
-    & luau-analyze --formatter=gnu Modules/Combat/AimPolicy.lua Modules/Combat/AimState.lua Modules/Combat/SilentAimPolicy.lua Modules/Utils/NativeTargetPolicy.lua
+    & luau-analyze --formatter=gnu Modules/Combat/AimPolicy.lua Modules/Combat/AimState.lua Modules/Combat/SilentAimPolicy.lua Modules/Combat/Prediction/MotionPolicy.lua Modules/Utils/NativeTargetPolicy.lua
     if ($LASTEXITCODE -ne 0) {
         throw "Luau analysis failed."
     }

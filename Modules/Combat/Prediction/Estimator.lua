@@ -41,6 +41,7 @@ function Estimator.new(kalman, config)
         RawVelocity = ZERO,
         PhysicsVelocity = ZERO,
         TimeDelta = DEFAULT_DT,
+        ObservationAge = 0,
     }
     return self
 end
@@ -152,6 +153,7 @@ function Estimator:Estimate(raw, dt)
     result.RawVelocity = measurement
     result.PhysicsVelocity = physicsVelocity
     result.TimeDelta = sampleDt
+    result.ObservationAge = math.max(raw.ObservationAge or 0, 0)
     return result
 end
 

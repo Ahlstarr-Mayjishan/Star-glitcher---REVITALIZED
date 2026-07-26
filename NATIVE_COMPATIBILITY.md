@@ -20,6 +20,7 @@ Phạm vi của đợt kiểm tra này là place chính `11380216916 Star Glitch
 | Cube, orb và summon lạ | Tên dạng prop có thể bị loại | Sai một phần | Model trực tiếp trong `Entities` không còn bị loại chỉ vì tên; non-Humanoid vẫn được hỗ trợ khi có bằng chứng combat. |
 | Root/aim part | Có fallback rộng | Đúng một phần | Thứ tự root native được ưu tiên: `HumanoidRootPart`, `Torso`, `Head`; fallback `PrimaryPart/BasePart` chỉ dùng sau đó. |
 | Predictor | Dùng chung vị trí theo dõi của tracker | Sai | Mẫu vị trí/thời gian thuộc riêng state predictor của từng target, tránh velocity bằng 0 giả khi model di chuyển bằng CFrame/PivotTo. |
+| Replicated boss motion | Velocity về 0 giữa packet rồi spike ở packet kế | Chậm và giật | Giữ velocity ngắn hạn theo từng boss, decay mượt khi stale, bù tuổi packet vào lead, và catch-up theo khoảng cách thay vì snap ở 4,25 studs. |
 | Estimator turn rate | Dùng member không tồn tại `Vector3.XZ` | Runtime error, chặn toàn bộ aim | Tính tốc độ ngang trực tiếp từ `X² + Z²`; check script chặn `XZ/XY/YZ` quay lại. |
 | Aim Offset | Có option/UI nhưng không đi vào kết quả | Không hoạt động | Offset được áp dụng trong prediction engine kể cả khi tắt prediction. |
 | Adaptive hit feedback | Mọi health delta gần shot đều có thể bị coi là hit | Không đáng tin hoàn toàn | Chuyển thành tùy chọn experimental và tắt mặc định để tránh học từ damage của người khác hoặc damage trễ. |
@@ -31,7 +32,7 @@ Phạm vi của đợt kiểm tra này là place chính `11380216916 Star Glitch
 | Clean Status Char | UI gọi biến không tồn tại | Không hoạt động | Controller truyền đúng cleaner và Rayfield; reset các option thực sự tồn tại. |
 | Runtime UI loops | Player/Settings loop sống sau cleanup | Lỗi lifecycle | Cả hai controller được đăng ký vào runtime lifecycle và dừng khi destroy. |
 | Auto debris cleanup | Mặc định bật, tag rộng gồm Orb/Effect/Visual | Không an toàn với native | Tắt mặc định, bỏ tag rộng, bảo vệ các root/entity/status/boss native; Smart Cleanup giờ thực sự điều khiển adaptive scheduling. |
-| Loader/cache | Manifest dùng sai đường dẫn và jsDelivr `@main` có thể giữ bản cũ | Lỗi thời, dễ giữ cache cũ | Sửa bootstrap path, thêm Statically/GitHack trước jsDelivr, ghi nhớ CDN đang hoạt động cho rejoin, và tăng release lên `1.4.2`. |
+| Loader/cache | Manifest dùng sai đường dẫn và jsDelivr `@main` có thể giữ bản cũ | Lỗi thời, dễ giữ cache cũ | Sửa bootstrap path, thêm Statically/GitHack trước jsDelivr, ghi nhớ CDN đang hoạt động cho rejoin, và tăng release lên `1.5.0`. |
 | Teleport/config notification | Phụ thuộc global Rayfield ngầm | Đúng một phần | Rayfield được truyền rõ ràng vào Player, Settings và Teleport UI. |
 
 ## Giới hạn còn lại

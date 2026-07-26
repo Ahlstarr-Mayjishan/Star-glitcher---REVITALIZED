@@ -16,12 +16,13 @@ local TARGET_PROFILE_SPHERE = "sphere"
 local TARGET_PROFILE_MINI_HUMANOID = "mini_humanoid"
 local TARGET_PROFILE_HUMANOID = "humanoid"
 
-function Engine.new(config)
+function Engine.new(config, motionPolicy)
     local self = setmetatable({}, Engine)
     self.Config = config
     self.Options = config.Options
     self.Prediction = config.Prediction or {}
     self.PvP = config.PvP or {}
+    self.MotionPolicy = motionPolicy
     self._cachedPing = 50
     self._lastPingCheck = 0
     return self
@@ -220,6 +221,14 @@ function Engine:Calculate(origin, targetPos, est, dt, entry, part, techniqueDeci
     local latency = self:_GetLatency() * self:_GetPingMultiplier()
     local frameComp = math.min(math.max(est.TimeDelta or dt or 0, 0), 1 / 20) * 0.5
     local totalTime = (travelTime + latency + frameComp) * technique.TimeScale
+    local observationCompensation = self.MotionPolicy
+        and self.MotionPolicy.ObservationCompensation(
+            est.ObservationAge or 0,
+            self.Prediction.MAX_OBSERVATION_EXTRAPOLATION or 0.1,
+            self.Prediction.OBSERVATION_COMPENSATION_SCALE or 0.9
+        )
+        or 0
+    totalTime = totalTime + observationCompensation
 
     local shotDir = toTarget.Unit
     local forwardSpeed = velocity:Dot(shotDir)

@@ -4,7 +4,7 @@
 ]]
 
 return {
-    Version = "1.4.3",
+    Version = "1.5.0",
     Files = {
         -- Core
         ["Core/Main.lua"] = { Version = 180 },
@@ -15,9 +15,9 @@ return {
         ["Core/Brain.lua"] = { Version = 130 },
         
         -- Data
-        ["Data/Config.lua"] = { Version = 160 },
+        ["Data/Config.lua"] = { Version = 170 },
         ["Data/PlaceProfiles.lua"] = { Version = 100 },
-        ["Data/Version.lua"] = { Version = 143 },
+        ["Data/Version.lua"] = { Version = 150 },
         
         -- Modules/Combat
         ["Modules/Combat/AimMath.lua"] = { Version = 100 },
@@ -27,18 +27,19 @@ return {
         ["Modules/Combat/AimPresentation.lua"] = { Version = 100 },
         ["Modules/Combat/AimController.lua"] = { Version = 100 },
         ["Modules/Combat/Aimbot.lua"] = { Version = 120 },
-        ["Modules/Combat/Predictor.lua"] = { Version = 150 },
+        ["Modules/Combat/Predictor.lua"] = { Version = 160 },
         ["Modules/Combat/SilentAim.lua"] = { Version = 150 },
         ["Modules/Combat/SilentAimPolicy.lua"] = { Version = 100 },
         ["Modules/Combat/TargetSelector.lua"] = { Version = 125 },
         ["Modules/Combat/UltraHell.lua"] = { Version = 110 },
         ["Modules/Combat/Prediction/SilentResolver.lua"] = { Version = 110 },
         ["Modules/Combat/Prediction/Base.lua"] = { Version = 100 },
-        ["Modules/Combat/Prediction/Engine.lua"] = { Version = 110 },
-        ["Modules/Combat/Prediction/Estimator.lua"] = { Version = 120 },
+        ["Modules/Combat/Prediction/Engine.lua"] = { Version = 120 },
+        ["Modules/Combat/Prediction/Estimator.lua"] = { Version = 130 },
         ["Modules/Combat/Prediction/FeedbackLoop.lua"] = { Version = 100 },
-        ["Modules/Combat/Prediction/Sampler.lua"] = { Version = 100 },
-        ["Modules/Combat/Prediction/Stabilizer.lua"] = { Version = 100 },
+        ["Modules/Combat/Prediction/Sampler.lua"] = { Version = 110 },
+        ["Modules/Combat/Prediction/Stabilizer.lua"] = { Version = 110 },
+        ["Modules/Combat/Prediction/MotionPolicy.lua"] = { Version = 100 },
         ["Modules/Combat/Prediction/TechniqueSelector.lua"] = { Version = 100 },
         
         -- Modules/Movement
