@@ -11,7 +11,6 @@ local UserInputService = game:GetService("UserInputService")
 local Players = game:GetService("Players")
 local Workspace = game:GetService("Workspace")
 local CoreGui = game:GetService("CoreGui")
-local Camera = Workspace.CurrentCamera
 
 local coreBootNow = os.clock()
 local coreBootUntil = tonumber(_G.__STAR_GLITCHER_CORE_BOOT_UNTIL) or 0
@@ -39,7 +38,9 @@ end
 -- 2. Initial Data Loading
 local Config  = requireModule("Data/Config.lua")
 local Version = requireModule("Data/Version.lua")
+local PlaceProfiles = requireModule("Data/PlaceProfiles.lua")
 local Options = Config.Options
+local placeProfile = PlaceProfiles.Get(game.PlaceId)
 local Normalize = requireModule("Modules/Core/Bootstrap/Normalize.lua")
 local RayfieldUI = requireModule("Modules/Core/Bootstrap/RayfieldUI.lua")
 local RejoinOnKick = requireModule("Modules/Core/Bootstrap/RejoinOnKick.lua")
@@ -69,6 +70,7 @@ local loadingNotification = Rayfield:Notify({
 -- 4. Component Loading (Dependency Order)
 -- Combat
 local Kalman          = requireModule("Modules/Utils/Math/Kalman.lua")
+local AimMath         = requireModule("Modules/Combat/AimMath.lua")
 local Tracker        = requireModule("Modules/Utils/NPCTracker.lua")
 local Detector       = requireModule("Modules/Utils/BossDetector.lua")
 local TargetClassifier = requireModule("Modules/Utils/TargetClassifier.lua")
@@ -77,7 +79,6 @@ local SelectiveResolver = requireModule("Modules/Combat/Prediction/SilentResolve
 local Aimbot          = requireModule("Modules/Combat/Aimbot.lua")
 local Selector        = requireModule("Modules/Combat/TargetSelector.lua")
 local SilentAim       = requireModule("Modules/Combat/SilentAim.lua")
-local UltraHell       = requireModule("Modules/Combat/UltraHell.lua")
 
 -- Movement Tools
 local TaskScheduler   = requireModule("Modules/Utils/TaskScheduler.lua")
@@ -113,7 +114,9 @@ local function setupMovement()
     movementSuite.slow  = requireModule("Modules/Movement/AntiSlowdown.lua").new(Options, mc, arb)
     movementSuite.stun  = requireModule("Modules/Movement/AntiStun.lua").new(Options, mc)
     movementSuite.noclip = requireModule("Modules/Movement/Noclip.lua").new(Options, mc)
-    movementSuite.killPart = requireModule("Modules/Movement/KillPartBypass.lua").new(Options, mc)
+    if placeProfile.EnableGamemodeTools then
+        movementSuite.killPart = requireModule("Modules/Movement/KillPartBypass.lua").new(Options, mc)
+    end
     movementSuite.clean = requireModule("Modules/Movement/AttributeCleaner.lua").new(Options, mc)
     movementSuite.charCleaner = requireModule("Modules/Utils/CharacterCleaner.lua").new(Options, mc)
     movementSuite.waypoint = requireModule("Modules/Movement/WaypointTeleport.lua").new(Options, mc)
@@ -126,16 +129,32 @@ local taskScheduler = TaskScheduler.new(Options)
 local input = InputHandler.new(Config)
 local detector = Detector.new()
 local tracker = Tracker.new(Config, detector, taskScheduler, TargetClassifier)
-local aimbot = Aimbot.new(Config)
+local aimbot = Aimbot.new(Config, AimMath)
 local silentResolver = SelectiveResolver.new(Config)
 local silentAim = SilentAim.new(Config, Synapse, silentResolver)
-local ultraHell = UltraHell.new(Options)
+local ultraHell = nil
+if placeProfile.EnableGamemodeTools then
+    local UltraHell = requireModule("Modules/Combat/UltraHell.lua")
+    ultraHell = UltraHell.new(Options)
+else
+    Options.UltraHellEnabled = false
+    Options.KillPartBypassEnabled = false
+end
 local cleaner = GarbageCollector.new(Options, resourceManager)
 local rejoinOnKick = RejoinOnKick.new(Options, _G.StarGlitcher_BootloaderURL or "Main.lua")
 
-local pred = Predictor.new(Config, loadModule, Kalman)
-local selector = Selector.new(Config, tracker, pred)
+local pred = Predictor.new(Config, loadModule, Kalman, AimMath)
+local selector = Selector.new(Config, tracker, pred, AimMath)
 local dataPruner = DataPruner.new(taskScheduler, tracker, pred)
+
+input:SetShotCallback(function()
+    local entry = tracker.CurrentTargetEntry
+    if not entry then
+        return
+    end
+    local part = tracker:GetTargetPart(entry)
+    pred:RegisterShot(entry, part and part.Position or nil)
+end)
 
 local visuals = {
     fov = FOVCircle.new(Options),
@@ -158,7 +177,7 @@ tracker:Init()
 aimbot:Init()
 selector:Init()
 silentAim:Init()
-ultraHell:Init()
+if ultraHell then ultraHell:Init() end
 dataPruner:Init()
 resourceManager:Init()
 cleaner:Init()
@@ -200,7 +219,9 @@ task.spawn(function()
 
     safeLoadTab("UI/Tabs/TeleportTab.lua", movementSuite.waypoint)
     safeLoadTab("UI/Tabs/BlatantTab.lua")
-    safeLoadTab("UI/Tabs/GamemodeTab.lua", movementSuite.killPart, ultraHell, movementSuite.waypoint)
+    if placeProfile.EnableGamemodeTools then
+        safeLoadTab("UI/Tabs/GamemodeTab.lua", movementSuite.killPart, ultraHell, movementSuite.waypoint)
+    end
     
     local settingsOk, settingsTabController = pcall(function()
         return requireModule("UI/Tabs/SettingsTab.lua")(Window, Options, cleaner, resourceManager, tracker, taskScheduler)
@@ -225,11 +246,14 @@ local runtimeLifecycle = RuntimeLifecycle.new(
     function(url) return loadstring(game:HttpGet(url))() end,
     function() return tonumber(Config.VERSION:gsub("%.", "")) or 130 end, -- Fallback version
     function() 
-        return {
+        local objects = {
             input, localChar, detector, tracker, pred, selector, aimbot, silentAim,
-            ultraHell, cleaner, visuals.fov, visuals.highlight, visuals.technique, visuals.dot, brain,
+            cleaner, visuals.fov, visuals.highlight, visuals.technique, visuals.dot, brain,
             taskScheduler, dataPruner, movementSuite.waypoint, rejoinOnKick
-        } 
+        }
+        if ultraHell then objects[#objects + 1] = ultraHell end
+        if movementSuite.killPart then objects[#objects + 1] = movementSuite.killPart end
+        return objects
     end,
     function() end
 )
@@ -240,8 +264,17 @@ rejoinOnKick:Init()
 
 -- Event Connections
 local function reg(connection) return runtimeLifecycle:RegisterConnection(connection) end
-reg(RunService.Heartbeat:Connect(function(dt) brain:Scan(UserInputService:GetMouseLocation(), Camera.CFrame.Position, dt) end))
-reg(RunService.RenderStepped:Connect(function(dt) brain:Update(dt, UserInputService:GetMouseLocation(), Camera.CFrame) end))
+reg(RunService.RenderStepped:Connect(function(dt)
+    local camera = Workspace.CurrentCamera
+    if not camera then
+        return
+    end
+
+    local mousePos = UserInputService:GetMouseLocation()
+    local cameraCFrame = camera.CFrame
+    brain:Scan(mousePos, cameraCFrame.Position, dt)
+    brain:Update(dt, mousePos, cameraCFrame)
+end))
 
 warn(" [Core] Star Glitcher Modular Active (Optimized v7.1).")
 return _G.BossAimAssist_SessionID
