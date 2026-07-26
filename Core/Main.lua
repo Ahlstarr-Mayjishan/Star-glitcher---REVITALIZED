@@ -79,6 +79,11 @@ local SelectiveResolver = requireModule("Modules/Combat/Prediction/SilentResolve
 local Aimbot          = requireModule("Modules/Combat/Aimbot.lua")
 local Selector        = requireModule("Modules/Combat/TargetSelector.lua")
 local SilentAim       = requireModule("Modules/Combat/SilentAim.lua")
+local AimPolicy       = requireModule("Modules/Combat/AimPolicy.lua")
+local AimState        = requireModule("Modules/Combat/AimState.lua")
+local AimActuator     = requireModule("Modules/Combat/AimActuator.lua")
+local AimPresentation = requireModule("Modules/Combat/AimPresentation.lua")
+local AimController   = requireModule("Modules/Combat/AimController.lua")
 
 -- Movement Tools
 local TaskScheduler   = requireModule("Modules/Utils/TaskScheduler.lua")
@@ -86,8 +91,6 @@ local LocalCharacter = requireModule("Modules/Utils/LocalCharacter.lua")
 local MovementArbiter = requireModule("Modules/Movement/MovementArbiter.lua")
 local Synapse         = requireModule("Modules/Utils/Synapse.lua")
 
--- Logic Orchestras
-local Brain           = requireModule("Modules/Core/Brain.lua")
 local InputHandler    = requireModule("Modules/Utils/InputHandler.lua")
 local DataPruner      = requireModule("Modules/Utils/DataPruner.lua")
 local GarbageCollector = requireModule("Modules/Utils/GarbageCollector.lua")
@@ -147,15 +150,6 @@ local pred = Predictor.new(Config, loadModule, Kalman, AimMath)
 local selector = Selector.new(Config, tracker, pred, AimMath)
 local dataPruner = DataPruner.new(taskScheduler, tracker, pred)
 
-input:SetShotCallback(function()
-    local entry = tracker.CurrentTargetEntry
-    if not entry then
-        return
-    end
-    local part = tracker:GetTargetPart(entry)
-    pred:RegisterShot(entry, part and part.Position or nil)
-end)
-
 local visuals = {
     fov = FOVCircle.new(Options),
     highlight = Highlight.new(),
@@ -163,10 +157,20 @@ local visuals = {
     dot = TargetDot.new()
 }
 
-local brain = Brain.new(Config, {
-    Input = input, Tracker = tracker, Predictor = pred, Selector = selector,
-    Aimbot = aimbot, SilentAim = silentAim, Visuals = visuals
-}, loadModule)
+local aimActuator = AimActuator.new(Options, aimbot, silentAim)
+local aimPresentation = AimPresentation.new(Options, visuals)
+local aimController = AimController.new(Config, {
+    Input = input,
+    Tracker = tracker,
+    Predictor = pred,
+    Selector = selector,
+    Actuator = aimActuator,
+    Presentation = aimPresentation,
+}, AimPolicy, AimState)
+
+input:SetShotCallback(function(now)
+    aimController:OnShot(now)
+end)
 
 -- 6. Initialize Systems
 input:Init()
@@ -247,8 +251,8 @@ local runtimeLifecycle = RuntimeLifecycle.new(
     function() return tonumber(Config.VERSION:gsub("%.", "")) or 130 end, -- Fallback version
     function() 
         local objects = {
-            input, localChar, detector, tracker, pred, selector, aimbot, silentAim,
-            cleaner, visuals.fov, visuals.highlight, visuals.technique, visuals.dot, brain,
+            aimController, input, localChar, detector, tracker, pred, selector, aimbot, silentAim,
+            cleaner, visuals.fov, visuals.highlight, visuals.technique, visuals.dot,
             taskScheduler, dataPruner, movementSuite.waypoint, rejoinOnKick
         }
         if ultraHell then objects[#objects + 1] = ultraHell end
@@ -272,9 +276,8 @@ reg(RunService.RenderStepped:Connect(function(dt)
 
     local mousePos = UserInputService:GetMouseLocation()
     local cameraCFrame = camera.CFrame
-    brain:Scan(mousePos, cameraCFrame.Position, dt)
-    brain:Update(dt, mousePos, cameraCFrame)
+    aimController:Step(dt, mousePos, cameraCFrame, camera)
 end))
 
-warn(" [Core] Star Glitcher Modular Active (Optimized v7.1).")
+warn(" [Core] Star Glitcher Aim Pipeline Active (Optimized v8.0).")
 return _G.BossAimAssist_SessionID

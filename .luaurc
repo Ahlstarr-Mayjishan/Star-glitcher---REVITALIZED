@@ -1,0 +1,13 @@
+{
+    "languageMode": "nonstrict",
+    "globals": [
+        "Drawing",
+        "checkcaller",
+        "getgenv",
+        "getnamecallmethod",
+        "hookmetamethod",
+        "loadstring",
+        "newcclosure",
+        "request"
+    ]
+}

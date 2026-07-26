@@ -1,5 +1,6 @@
 /.codegraph
 /LocalLoader.lua
 /Ref game logic
-/Tests
-/Tools
+/graphify-out
+/Tools/*
+!/Tools/Check.ps1

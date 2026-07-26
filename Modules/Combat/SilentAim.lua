@@ -6,7 +6,6 @@
 
 local Workspace = game:GetService("Workspace")
 local Players = game:GetService("Players")
-local UserInputService = game:GetService("UserInputService")
 
 local SilentAim = {}
 SilentAim.__index = SilentAim
@@ -216,7 +215,6 @@ function SilentAim.new(config, synapse, resolver)
     self.CurrentTargetEntry = nil
     self._lastClickTime = 0
     self._lastRedirectTime = 0
-    self._connections = {}
     self._destroyed = false
     self._hookState = nil
     return self
@@ -244,23 +242,17 @@ function SilentAim:Init()
     self._destroyed = false
     self._hookState = ensureHookState()
     self._hookState.Instance = self
+end
 
-    local selfRef = self
+function SilentAim:NotifyShot(now, entry)
+    self._lastClickTime = now or clock()
+    if not (self.Active and entry) then
+        return
+    end
     local LocalPlayer = Players.LocalPlayer
-    table.insert(self._connections, UserInputService.InputBegan:Connect(function(input, gpe)
-        if gpe then
-            return
-        end
-        if input.UserInputType == Enum.UserInputType.MouseButton1 then
-            local now = clock()
-            selfRef._lastClickTime = now
-            if selfRef.Active and selfRef.CurrentTargetEntry then
-                local char = LocalPlayer.Character
-                local muzzlePos = (char and char:GetPivot().Position) or Vector3.zero
-                selfRef.Synapse.fire("ShotFired", selfRef.CurrentTargetEntry.Model, now, muzzlePos)
-            end
-        end
-    end))
+    local character = LocalPlayer.Character
+    local muzzlePosition = (character and character:GetPivot().Position) or Vector3.zero
+    self.Synapse.fire("ShotFired", entry.Model, self._lastClickTime, muzzlePosition)
 end
 
 function SilentAim:SetState(active, targetPart, targetPos, currentEntry, dt)
@@ -316,10 +308,6 @@ function SilentAim:Destroy()
         self._hookState.Instance = nil
     end
 
-    for _, connection in ipairs(self._connections) do
-        connection:Disconnect()
-    end
-    table.clear(self._connections)
 end
 
 return SilentAim

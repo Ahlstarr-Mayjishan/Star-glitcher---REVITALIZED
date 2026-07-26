@@ -99,13 +99,19 @@ function Predictor:RegisterShot(entry, targetPos)
     end
 end
 
-function Predictor:Predict(origin, part, entry, dt)
+function Predictor:PredictResult(origin, part, entry, dt)
     if not part then
-        return nil, nil
+        return nil
     end
 
     -- GUARD: Ensure entry exists
-    if not entry then return part.Position end
+    if not entry then
+        return {
+            AimPosition = part.Position,
+            RawPosition = part.Position,
+            Technique = nil,
+        }
+    end
 
     local now = os.clock()
     if (now - self._lastPrune) >= self._pruneInterval then
@@ -144,7 +150,19 @@ function Predictor:Predict(origin, part, entry, dt)
     end
 
     -- 6. PRESENTATION (Smoothing)
-    return state.Stabilizer:Smooth(predicted, dt), predicted, techniqueDecision
+    return {
+        AimPosition = state.Stabilizer:Smooth(predicted, dt),
+        RawPosition = predicted,
+        Technique = techniqueDecision,
+    }
+end
+
+function Predictor:Predict(origin, part, entry, dt)
+    local result = self:PredictResult(origin, part, entry, dt)
+    if not result then
+        return nil, nil, nil
+    end
+    return result.AimPosition, result.RawPosition, result.Technique
 end
 
 function Predictor:Destroy()

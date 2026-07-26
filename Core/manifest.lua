@@ -7,7 +7,7 @@ return {
     Version = "1.3.0",
     Files = {
         -- Core
-        ["Core/Main.lua"] = { Version = 150 },
+        ["Core/Main.lua"] = { Version = 160 },
         ["Core/Bootstrap/Normalize.lua"] = { Version = 100 },
         ["Core/Bootstrap/RayfieldUI.lua"] = { Version = 110 },
         ["Core/Bootstrap/RejoinOnKick.lua"] = { Version = 100 },
@@ -21,9 +21,14 @@ return {
         
         -- Modules/Combat
         ["Modules/Combat/AimMath.lua"] = { Version = 100 },
+        ["Modules/Combat/AimPolicy.lua"] = { Version = 100 },
+        ["Modules/Combat/AimState.lua"] = { Version = 100 },
+        ["Modules/Combat/AimActuator.lua"] = { Version = 100 },
+        ["Modules/Combat/AimPresentation.lua"] = { Version = 100 },
+        ["Modules/Combat/AimController.lua"] = { Version = 100 },
         ["Modules/Combat/Aimbot.lua"] = { Version = 120 },
-        ["Modules/Combat/Predictor.lua"] = { Version = 135 },
-        ["Modules/Combat/SilentAim.lua"] = { Version = 125 },
+        ["Modules/Combat/Predictor.lua"] = { Version = 140 },
+        ["Modules/Combat/SilentAim.lua"] = { Version = 130 },
         ["Modules/Combat/TargetSelector.lua"] = { Version = 125 },
         ["Modules/Combat/UltraHell.lua"] = { Version = 110 },
         ["Modules/Combat/Prediction/SilentResolver.lua"] = { Version = 110 },
