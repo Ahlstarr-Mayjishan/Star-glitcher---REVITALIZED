@@ -21,8 +21,16 @@ try {
     }
 
     $trackerSource = Get-Content "Modules/Utils/NPCTracker.lua" -Raw
-    if ($trackerSource -notmatch "DescendantAdded" -or $trackerSource -notmatch "AttributeChanged") {
+    if ($trackerSource -notmatch "DescendantAdded" -or $trackerSource -notmatch "ClassifyAttribute") {
         throw "NPC tracker is missing event-driven summon invalidation."
+    }
+    if ($trackerSource -notmatch "_dirtyScanInterval" -or $trackerSource.Contains("DescendantAdded:Connect(function()")) {
+        throw "NPC tracker is missing bounded, classified dirty scans."
+    }
+
+    $silentAimSource = Get-Content "Modules/Combat/SilentAim.lua" -Raw
+    if ($silentAimSource -match "isBossAggressiveRemote" -or -not $silentAimSource.Contains('Ready (lazy hook)')) {
+        throw "Silent aim still installs or applies an unsafe broad boss hook."
     }
 
     $invalidVectorMembers = & rg -n '\.(XZ|XY|YZ)\b' Modules -g '*.lua' -g '*.luau'
@@ -61,6 +69,7 @@ try {
         "Modules/Utils/NativeTargetPolicy.lua",
         "Modules/Utils/NPCTracker.lua",
         "Modules/Utils/TargetClassifier.lua"
+        "Modules/Utils/TrackerInvalidationPolicy.lua"
     )
 
     & selene --allow-warnings $aimFiles
@@ -68,7 +77,7 @@ try {
         throw "Selene failed."
     }
 
-    & luau-analyze --formatter=gnu Modules/Combat/AimPolicy.lua Modules/Combat/AimState.lua Modules/Combat/SilentAimPolicy.lua Modules/Combat/Prediction/MotionPolicy.lua Modules/Utils/NativeTargetPolicy.lua
+    & luau-analyze --formatter=gnu Modules/Combat/AimPolicy.lua Modules/Combat/AimState.lua Modules/Combat/SilentAimPolicy.lua Modules/Combat/Prediction/MotionPolicy.lua Modules/Utils/NativeTargetPolicy.lua Modules/Utils/TrackerInvalidationPolicy.lua
     if ($LASTEXITCODE -ne 0) {
         throw "Luau analysis failed."
     }

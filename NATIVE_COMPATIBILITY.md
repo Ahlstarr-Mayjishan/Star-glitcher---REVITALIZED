@@ -21,6 +21,7 @@ Phạm vi của đợt kiểm tra này là place chính `11380216916 Star Glitch
 | Root/aim part | Có fallback rộng | Đúng một phần | Thứ tự root native được ưu tiên: `HumanoidRootPart`, `Torso`, `Head`; fallback `PrimaryPart/BasePart` chỉ dùng sau đó. |
 | Predictor | Dùng chung vị trí theo dõi của tracker | Sai | Mẫu vị trí/thời gian thuộc riêng state predictor của từng target, tránh velocity bằng 0 giả khi model di chuyển bằng CFrame/PivotTo. |
 | Replicated boss motion | Velocity về 0 giữa packet rồi spike ở packet kế | Chậm và giật | Giữ velocity ngắn hạn theo từng boss, decay mượt khi stale, bù tuổi packet vào lead, và catch-up theo khoảng cách thay vì snap ở 4,25 studs. |
+| Boss spawn performance | Mọi descendant/effect mới có thể làm dirty toàn bộ target và boss cache | Lag mạnh khi boss/effect xuất hiện | Chỉ root, humanoid, status, health và combat marker mới invalid cache; effect/particle bị bỏ qua, dirty scan bị giới hạn khoảng 28 Hz, và silent hook chỉ cài khi thực sự chọn Silent Aim. |
 | Estimator turn rate | Dùng member không tồn tại `Vector3.XZ` | Runtime error, chặn toàn bộ aim | Tính tốc độ ngang trực tiếp từ `X² + Z²`; check script chặn `XZ/XY/YZ` quay lại. |
 | Aim Offset | Có option/UI nhưng không đi vào kết quả | Không hoạt động | Offset được áp dụng trong prediction engine kể cả khi tắt prediction. |
 | Adaptive hit feedback | Mọi health delta gần shot đều có thể bị coi là hit | Không đáng tin hoàn toàn | Chuyển thành tùy chọn experimental và tắt mặc định để tránh học từ damage của người khác hoặc damage trễ. |

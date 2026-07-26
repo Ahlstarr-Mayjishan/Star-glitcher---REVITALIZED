@@ -30,7 +30,7 @@ local COMBAT_ATTRIBUTE_NAMES = {
     "Targetable", "Enemy", "Hostile", "IsEnemy", "IsBoss", "Boss",
 }
 
-function NPCTracker.new(config, detector, taskScheduler, targetClassifier)
+function NPCTracker.new(config, detector, taskScheduler, targetClassifier, invalidationPolicy)
     local self = setmetatable({}, NPCTracker)
     self.Options = config.Options
     self.Blacklist = config.Blacklist or {"statue", "tuong", "Minigames", "monument", "altar", "dummy", "board", "spawn", "shop", "gui", "display", "map", "portal", "tele", "rsbroad", "landscape", "terrain", "sign", "summon", "bảng", "prompt", "interact"}
@@ -38,6 +38,7 @@ function NPCTracker.new(config, detector, taskScheduler, targetClassifier)
     self.Detector = detector
     self.TaskScheduler = taskScheduler
     self.TargetClassifier = targetClassifier
+    self.InvalidationPolicy = invalidationPolicy
     self.NativeTargetPolicy = nil
     
     self.CurrentTargetEntry = nil
@@ -47,6 +48,7 @@ function NPCTracker.new(config, detector, taskScheduler, targetClassifier)
     -- Performance: Polling Strategy
     self._lastScan = 0
     self._scanInterval = 0.1 -- Scan every 100ms instead of every frame
+    self._dirtyScanInterval = 0.035
     self._cachedTargets = {}
     self._cacheDirty = true
     self._folderRefs = {}
@@ -123,15 +125,19 @@ function NPCTracker:_disconnectModel(model)
     self._modelConnections[model] = nil
 end
 
-function NPCTracker:_invalidateModel(model)
+function NPCTracker:_invalidateModel(model, resetBoss, resetPart)
     local entry = self._entries[model]
     if entry then
         entry.LastValidation = 0
-        entry.LastBossCheck = 0
-        entry.ResolvedTargetPart = nil
-        entry.ResolvedTargetKey = nil
+        if resetBoss then
+            entry.LastBossCheck = 0
+        end
+        if resetPart then
+            entry.ResolvedTargetPart = nil
+            entry.ResolvedTargetKey = nil
+        end
     end
-    if self.Detector and self.Detector.Invalidate then
+    if resetBoss and self.Detector and self.Detector.Invalidate then
         self.Detector:Invalidate(model)
     end
     self._cacheDirty = true
@@ -144,14 +150,41 @@ function NPCTracker:_watchModel(model)
 
     local selfRef = self
     local connections = {}
-    connections[#connections + 1] = model.DescendantAdded:Connect(function()
-        selfRef:_invalidateModel(model)
+    local function onDescendantChanged(descendant)
+        local entry = selfRef._entries[model]
+        local primaryPart = entry and entry.PrimaryPart
+        local policyClass = descendant.ClassName
+        if descendant:IsA("BasePart") then
+            policyClass = "BasePart"
+        elseif descendant:IsA("Humanoid") then
+            policyClass = "Humanoid"
+        elseif descendant:IsA("Folder") then
+            policyClass = "Folder"
+        elseif descendant:IsA("ValueBase") then
+            policyClass = "ValueBase"
+        end
+        local action = selfRef.InvalidationPolicy.ClassifyDescendant(
+            policyClass,
+            descendant.Name,
+            tostring(selfRef.Options.TargetPart or "HumanoidRootPart"),
+            primaryPart ~= nil and primaryPart.Parent ~= nil
+        )
+        if action then
+            selfRef:_invalidateModel(model, action.ResetBoss, action.ResetPart)
+        end
+    end
+
+    connections[#connections + 1] = model.DescendantAdded:Connect(function(descendant)
+        onDescendantChanged(descendant)
     end)
-    connections[#connections + 1] = model.DescendantRemoving:Connect(function()
-        selfRef:_invalidateModel(model)
+    connections[#connections + 1] = model.DescendantRemoving:Connect(function(descendant)
+        onDescendantChanged(descendant)
     end)
-    connections[#connections + 1] = model.AttributeChanged:Connect(function()
-        selfRef:_invalidateModel(model)
+    connections[#connections + 1] = model.AttributeChanged:Connect(function(attributeName)
+        local action = selfRef.InvalidationPolicy.ClassifyAttribute(attributeName)
+        if action then
+            selfRef:_invalidateModel(model, action.ResetBoss, action.ResetPart)
+        end
     end)
     connections[#connections + 1] = model.AncestryChanged:Connect(function(_, parent)
         if not parent then
@@ -496,7 +529,8 @@ end
 function NPCTracker:GetTargets()
     local now = os.clock()
 
-    if not self._cacheDirty and (now - self._lastScan) < self._scanInterval then
+    local scanInterval = self._cacheDirty and self._dirtyScanInterval or self._scanInterval
+    if (now - self._lastScan) < scanInterval then
         return self._cachedTargets
     end
 

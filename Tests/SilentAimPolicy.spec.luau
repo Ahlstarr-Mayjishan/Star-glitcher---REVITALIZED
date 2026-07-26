@@ -22,5 +22,9 @@ assert(
 	not SilentAimPolicy.ShouldRewriteSideEffect(false, 0, 0, 0.35),
 	"side effects must remain untouched without a target lock"
 )
+assert(SilentAimPolicy.IsCombatRemoteName("ShootProjectile"), "explicit shoot remotes must be eligible")
+assert(not SilentAimPolicy.IsCombatRemoteName("MinigameEvent"), "boss spawning remotes must never be rewritten")
+assert(not SilentAimPolicy.IsCombatRemoteName("ProjectileReplication"), "replication remotes must never be rewritten")
+assert(not SilentAimPolicy.IsCombatRemoteName("InitializeProjectile"), "projectile initialization remotes must never be rewritten")
 
-print("Silent aim policy: 5 cases passed")
+print("Silent aim policy: 9 cases passed")

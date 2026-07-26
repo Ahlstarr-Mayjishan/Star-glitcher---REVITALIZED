@@ -2,7 +2,7 @@
 
 local manifest = require("../Core/manifest")
 
-assert(manifest.Version == "1.6.0", "manifest release version must match coherent event-driven targeting")
+assert(manifest.Version == "1.6.1", "manifest release version must match bounded boss invalidation")
 assert(manifest.Files["Modules/Core/Bootstrap/Normalize.lua"], "bootstrap normalize path must match the runtime require path")
 assert(manifest.Files["Modules/Core/Bootstrap/RayfieldUI.lua"], "Rayfield bootstrap path must match the runtime require path")
 assert(not manifest.Files["Core/Bootstrap/Normalize.lua"], "obsolete bootstrap cache key must not remain")
@@ -10,6 +10,7 @@ assert(manifest.Files["Modules/Utils/NativeTargetPolicy.lua"], "native target po
 assert(manifest.Files["Modules/Utils/NativeStatus.lua"], "native status adapter must ship through the remote loader")
 assert(manifest.Files["Modules/Combat/SilentAimPolicy.lua"], "silent aim policy must ship through the remote loader")
 assert(manifest.Files["Modules/Combat/Prediction/MotionPolicy.lua"], "motion policy must ship through the remote loader")
+assert(manifest.Files["Modules/Utils/TrackerInvalidationPolicy.lua"], "bounded tracker invalidation policy must ship through the remote loader")
 assert(manifest.Files["Core/Main.lua"].Version >= 180, "core cache version must invalidate older remote copies")
 
-print("Manifest compatibility: 9 cases passed")
+print("Manifest compatibility: 10 cases passed")

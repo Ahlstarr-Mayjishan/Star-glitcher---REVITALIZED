@@ -4,10 +4,10 @@
 ]]
 
 return {
-    Version = "1.6.0",
+    Version = "1.6.1",
     Files = {
         -- Core
-        ["Core/Main.lua"] = { Version = 190 },
+        ["Core/Main.lua"] = { Version = 200 },
         ["Modules/Core/Bootstrap/Normalize.lua"] = { Version = 100 },
         ["Modules/Core/Bootstrap/RayfieldUI.lua"] = { Version = 110 },
         ["Modules/Core/Bootstrap/RejoinOnKick.lua"] = { Version = 100 },
@@ -15,9 +15,9 @@ return {
         ["Core/Brain.lua"] = { Version = 130 },
         
         -- Data
-        ["Data/Config.lua"] = { Version = 180 },
+        ["Data/Config.lua"] = { Version = 181 },
         ["Data/PlaceProfiles.lua"] = { Version = 100 },
-        ["Data/Version.lua"] = { Version = 160 },
+        ["Data/Version.lua"] = { Version = 161 },
         
         -- Modules/Combat
         ["Modules/Combat/AimMath.lua"] = { Version = 100 },
@@ -28,8 +28,8 @@ return {
         ["Modules/Combat/AimController.lua"] = { Version = 110 },
         ["Modules/Combat/Aimbot.lua"] = { Version = 120 },
         ["Modules/Combat/Predictor.lua"] = { Version = 160 },
-        ["Modules/Combat/SilentAim.lua"] = { Version = 160 },
-        ["Modules/Combat/SilentAimPolicy.lua"] = { Version = 100 },
+        ["Modules/Combat/SilentAim.lua"] = { Version = 170 },
+        ["Modules/Combat/SilentAimPolicy.lua"] = { Version = 110 },
         ["Modules/Combat/TargetSelector.lua"] = { Version = 125 },
         ["Modules/Combat/UltraHell.lua"] = { Version = 110 },
         ["Modules/Combat/Prediction/SilentResolver.lua"] = { Version = 110 },
@@ -63,11 +63,12 @@ return {
         ["Modules/Utils/GarbageCollector.lua"] = { Version = 130 },
         ["Modules/Utils/InputHandler.lua"] = { Version = 115 },
         ["Modules/Utils/LocalCharacter.lua"] = { Version = 110 },
-        ["Modules/Utils/NPCTracker.lua"] = { Version = 170 },
+        ["Modules/Utils/NPCTracker.lua"] = { Version = 180 },
         ["Modules/Utils/ResourceManager.lua"] = { Version = 170 },
         ["Modules/Utils/Synapse.lua"] = { Version = 100 },
         ["Modules/Utils/TaskScheduler.lua"] = { Version = 110 },
         ["Modules/Utils/TargetClassifier.lua"] = { Version = 110 },
+        ["Modules/Utils/TrackerInvalidationPolicy.lua"] = { Version = 100 },
         ["Modules/Utils/NativeTargetPolicy.lua"] = { Version = 100 },
         ["Modules/Utils/NativeStatus.lua"] = { Version = 100 },
         ["Modules/Utils/Math/Kalman.lua"] = { Version = 100 },
